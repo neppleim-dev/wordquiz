@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>즐거운 한국어 맞춤법 교실</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Jua & Noto Sans KR for friendly and legible typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Tone.js for cheerful sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        display: ['Jua', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        },
+                        warm: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .card-bounce {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+        }
+        .card-bounce:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.12);
+        }
+        .card-bounce:active {
+            transform: translateY(0px) scale(0.98);
+        }
+        .highlight-blank {
+            display: inline-block;
+            min-width: 80px;
+            padding: 2px 12px;
+            margin: 0 4px;
+            border-bottom: 3px solid #16a34a;
+            background-color: #dcfce7;
+            color: #15803d;
+            border-radius: 8px;
+            font-weight: 700;
+            text-align: center;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800 antialiased selection:bg-brand-200 selection:text-brand-900">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-30 border-b border-slate-200 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2.5 cursor-pointer" onclick="app.navigateHome()">
+                <div class="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                    <i class="ph-fill ph-book-open-text text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-display text-xl sm:text-2xl text-slate-800 tracking-wide leading-none">바른 한국어 맞춤법</h1>
+                    <p class="text-xs text-slate-500 font-medium mt-0.5">다문화 학생을 위한 신나는 어휘 퀴즈</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Sound Toggle -->
+                <button id="soundToggleBtn" onclick="app.toggleSound()" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="소리 켜기/끄기">
+                    <i id="soundIcon" class="ph-fill ph-speaker-high text-xl"></i>
+                </button>
+
+                <!-- Current Student Badge (Hidden when logged out) -->
+                <div id="studentBadge" class="hidden items-center gap-2 bg-brand-50 border border-brand-200 px-3 py-1.5 rounded-xl">
+                    <i class="ph-fill ph-student text-brand-600 text-lg"></i>
+                    <span id="headerStudentInfo" class="text-sm font-bold text-brand-800"></span>
+                    <button onclick="app.logoutStudent()" class="ml-1 text-xs text-slate-400 hover:text-red-500 font-medium underline" title="학생 변경">로그아웃</button>
+                </div>
+
+                <!-- Teacher Mode Button -->
+                <button onclick="app.openTeacherAuthOrDashboard()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold transition-all shadow-sm">
+                    <i class="ph-fill ph-chalkboard-teacher text-lg text-amber-400"></i>
+                    <span class="hidden sm:inline">교사 관리</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col">
+
+        <!-- 1. LOGIN SCREEN (Student Entry) -->
+        <section id="view-login" class="flex-1 flex items-center justify-center py-6">
+            <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-10 w-full max-w-md relative overflow-hidden">
+                <div class="absolute -top-12 -right-12 w-32 h-32 bg-brand-100 rounded-full opacity-60 pointer-events-none"></div>
+                <div class="absolute -bottom-12 -left-12 w-28 h-28 bg-amber-100 rounded-full opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10 text-center">
+                    <div class="w-20 h-20 bg-brand-50 border-2 border-brand-200 text-brand-600 rounded-3xl mx-auto flex items-center justify-center mb-4 shadow-sm">
+                        <i class="ph-duotone ph-smiley text-5xl"></i>
+                    </div>
+                    <h2 class="font-display text-2xl sm:text-3xl text-slate-800 mb-2">환영합니다! 👋</h2>
+                    <p class="text-slate-600 text-sm sm:text-base mb-6 leading-relaxed">
+                        맞춤법 퀴즈를 시작하기 위해<br>자신의 <strong class="text-brand-600">학번</strong>과 <strong class="text-brand-600">이름</strong>을 입력해 주세요.
+                    </p>
+
+                    <form onsubmit="app.handleStudentLogin(event)" class="space-y-4 text-left">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1.5">학번 (또는 반/번호)</label>
+                            <div class="relative">
+                                <i class="ph ph-identification-badge absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl"></i>
+                                <input type="text" id="inputStudentId" required placeholder="예: 30105 또는 3학년 1반"
+                                    class="w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-brand-500 focus:outline-none text-base font-medium transition-colors">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1.5">이름</label>
+                            <div class="relative">
+                                <i class="ph ph-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl"></i>
+                                <input type="text" id="inputStudentName" required placeholder="예: 김민수"
+                                    class="w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-brand-500 focus:outline-none text-base font-medium transition-colors">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 mt-2 rounded-2xl bg-brand-600 hover:bg-brand-700 active:scale-[0.99] text-white font-display text-xl tracking-wide shadow-lg shadow-brand-600/25 transition-all flex items-center justify-center gap-2">
+                            <span>학습 시작하기</span>
+                            <i class="ph-bold ph-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. CHAPTER SELECTION SCREEN -->
+        <section id="view-chapters" class="hidden space-y-6">
+            <!-- Greeting Banner -->
+            <div class="bg-gradient-to-r from-brand-600 to-emerald-500 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-bold backdrop-blur-sm mb-2">오늘도 화이팅! 🌱</span>
+                    <h2 class="font-display text-2xl sm:text-3xl"><span id="welcomeStudentName"></span> 학생, 어떤 단원을 공부할까요?</h2>
+                    <p class="text-brand-50 text-sm sm:text-base mt-1">1장부터 5장까지 원하는 주제를 골라 퀴즈를 풀거나 단어장을 살펴보세요.</p>
+                </div>
+                <div class="flex gap-3 self-stretch sm:self-auto">
+                    <div class="bg-white/15 backdrop-blur-md rounded-2xl px-4 py-3 text-center flex-1 sm:flex-initial">
+                        <div class="text-xs text-brand-100">나의 완료 횟수</div>
+                        <div id="myTotalCompleted" class="font-display text-2xl mt-0.5">0회</div>
+                    </div>
+                    <div class="bg-white/15 backdrop-blur-md rounded-2xl px-4 py-3 text-center flex-1 sm:flex-initial">
+                        <div class="text-xs text-brand-100">나의 평균 점수</div>
+                        <div id="myAvgScore" class="font-display text-2xl mt-0.5">0점</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Count Option Bar -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <i class="ph-fill ph-sliders-horizontal text-brand-600 text-xl"></i>
+                    <span class="font-bold text-slate-700 text-sm sm:text-base">퀴즈 출제 방식 및 문제 수 선택:</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="app.setQuestionCount(5)" id="qCount-5" class="q-count-btn px-3.5 py-1.5 rounded-xl text-sm font-bold border-2 transition-all">5문제 (빠르게)</button>
+                    <button onclick="app.setQuestionCount(10)" id="qCount-10" class="q-count-btn px-3.5 py-1.5 rounded-xl text-sm font-bold border-2 transition-all">10문제 (기본)</button>
+                    <button onclick="app.setQuestionCount(20)" id="qCount-20" class="q-count-btn px-3.5 py-1.5 rounded-xl text-sm font-bold border-2 transition-all">20문제 (단원 대표)</button>
+                    <button onclick="app.setQuestionCount(999)" id="qCount-999" class="q-count-btn px-3.5 py-1.5 rounded-xl text-sm font-bold border-2 transition-all">단원 모든 단어 풀기 (완전 정복)</button>
+                </div>
+            </div>
+
+            <!-- All 100 Words Full Dictionary & Interactive Study Banner -->
+            <div class="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100/70 rounded-3xl p-5 sm:p-6 border-2 border-amber-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-start sm:items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-3xl shrink-0 shadow-md">
+                        <i class="ph-fill ph-books"></i>
+                    </div>
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-200/80 text-amber-900 text-xs font-bold mb-1">
+                            교재 01번 ~ 100번 모든 단어 수록
+                        </div>
+                        <h3 class="font-display text-xl sm:text-2xl text-slate-800">전체 100개 항목 모든 단어 사전 & 학습관</h3>
+                        <p class="text-slate-600 text-xs sm:text-sm mt-0.5">각 번호에 나오는 모든 낱말의 뜻, 비교 예문, 발음을 듣고 내가 공부한 단어를 체크해 보세요!</p>
+                    </div>
+                </div>
+                <button onclick="app.openStudyView('ALL')" class="w-full md:w-auto px-5 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-display text-base sm:text-lg shadow-md flex items-center justify-center gap-2 shrink-0 transition-all">
+                    <i class="ph-bold ph-magnifying-glass"></i>
+                    <span>모든 단어 학습하러 가기</span>
+                </button>
+            </div>
+
+            <!-- Chapters Grid (1장 ~ 5장 + 종합) -->
+            <div id="chapterCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Populated dynamically via JS -->
+            </div>
+
+            <!-- My Recent History Section -->
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-display text-xl text-slate-800 flex items-center gap-2">
+                        <i class="ph-fill ph-clock-counter-clockwise text-amber-500"></i>
+                        나의 최근 학습 기록
+                    </h3>
+                </div>
+                <div id="myRecentHistoryList" class="space-y-2.5">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. STUDY / WORD LIST MODAL OR VIEW -->
+        <section id="view-study" class="hidden space-y-6">
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <button onclick="app.showChaptersView()" class="inline-flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-slate-800 mb-2">
+                            <i class="ph-bold ph-arrow-left"></i> 단원 목록으로 돌아가기
+                        </button>
+                        <h2 id="studyChapterTitle" class="font-display text-2xl sm:text-3xl text-slate-800"></h2>
+                        <p id="studyChapterDesc" class="text-slate-500 text-sm mt-0.5"></p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+                        <button id="startFlashcardBtn" onclick="app.toggleStudyMode()" class="px-4 py-3 rounded-2xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-display text-base flex items-center justify-center gap-2 transition-colors">
+                            <i class="ph-fill ph-cards text-xl"></i>
+                            <span id="studyModeToggleText">플래시카드 모드로 보기</span>
+                        </button>
+                        <button id="startQuizFromStudyBtn" class="px-5 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-display text-base sm:text-lg shadow-md flex items-center justify-center gap-2">
+                            <i class="ph-fill ph-pencil-simple-line"></i>
+                            <span>이 단원 모든 단어 퀴즈 풀기</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chapter Filter Tabs & Search inside Study View -->
+                <div class="pt-4 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div id="studyChapterTabs" class="flex flex-wrap items-center gap-1.5">
+                        <!-- Dynamically rendered tabs: 전체(01~100), 1장, 2장, 3장, 4장, 5장 -->
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="relative flex-1 sm:w-64">
+                            <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="studySearchInput" oninput="app.renderStudyItems()" placeholder="번호(예: 01) 또는 단어 검색..."
+                                class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:border-brand-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Study Progress Bar -->
+                <div class="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700">
+                        <i class="ph-fill ph-check-Fat text-brand-600 text-lg"></i>
+                        <span>나의 단어 학습 진도율 (<span id="studyProgressCountText" class="text-brand-600">0 / 100</span> 항목 완료)</span>
+                    </div>
+                    <div class="w-full sm:w-64 h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div id="studyProgressBar" class="h-full bg-brand-500 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flashcard Interactive Mode Container (Hidden by default) -->
+            <div id="studyFlashcardContainer" class="hidden max-w-2xl w-full mx-auto">
+                <!-- Populated dynamically in Flashcard mode -->
+            </div>
+
+            <!-- All Word Cards List Container -->
+            <div id="studyItemsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Study cards populated dynamically -->
+            </div>
+        </section>
+
+        <!-- 4. QUIZ SCREEN -->
+        <section id="view-quiz" class="hidden flex-1 flex flex-col max-w-3xl w-full mx-auto">
+            <!-- Top Quiz Header -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm mb-5">
+                <div class="flex items-center justify-between mb-3">
+                    <button onclick="app.confirmQuitQuiz()" class="text-sm font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1">
+                        <i class="ph-bold ph-x"></i> 나가기
+                    </button>
+                    <span id="quizChapterBadge" class="px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-bold border border-brand-200"></span>
+                    <div class="text-sm font-bold text-slate-700">
+                        <span id="quizCurrentNum" class="text-brand-600 text-base">1</span> / <span id="quizTotalNum">10</span>
+                    </div>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="quizProgressBar" class="h-full bg-brand-500 transition-all duration-300 rounded-full" style="width: 10%"></div>
+                </div>
+            </div>
+
+            <!-- Quiz Question Card -->
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-lg p-6 sm:p-8 flex-1 flex flex-col justify-between">
+                <div>
+                    <!-- Sub-topic Tag & TTS button -->
+                    <div class="flex items-center justify-between gap-2 mb-4">
+                        <span id="quizTopicNumber" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-xs sm:text-sm font-bold">
+                            <i class="ph-fill ph-bookmark-simple text-amber-500"></i>
+                            <span id="quizTopicText">교재 01번 항목</span>
+                        </span>
+
+                        <button onclick="app.speakCurrentSentence()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold transition-colors">
+                            <i class="ph-fill ph-speaker-high text-brand-600"></i>
+                            <span>문장 듣기</span>
+                        </button>
+                    </div>
+
+                    <!-- Instruction -->
+                    <p class="text-slate-500 text-sm sm:text-base font-medium mb-3">다음 빈칸에 들어갈 알맞은 말을 골라 보세요.</p>
+
+                    <!-- Main Sentence Display -->
+                    <div class="bg-slate-50 border-2 border-slate-200/80 rounded-2xl p-6 sm:p-8 my-2 text-center">
+                        <p id="quizSentence" class="text-xl sm:text-2xl md:text-3xl font-bold text-slate-800 leading-relaxed break-keep"></p>
+                    </div>
+
+                    <!-- Easy Hint Box for Multicultural Students -->
+                    <div class="mt-4 flex items-center justify-between bg-amber-50/70 border border-amber-200/80 rounded-2xl px-4 py-3">
+                        <div class="flex items-center gap-2.5 text-amber-900 text-sm sm:text-base">
+                            <i class="ph-fill ph-lightbulb text-amber-500 text-xl shrink-0"></i>
+                            <span id="quizHintText" class="font-medium"></span>
+                        </div>
+                    </div>
+
+                    <!-- Option Buttons -->
+                    <div id="quizOptionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                        <!-- Dynamically rendered option buttons -->
+                    </div>
+                </div>
+
+                <!-- Feedback & Explanation Box (Shown after answering) -->
+                <div id="quizFeedbackBox" class="hidden mt-6 rounded-2xl p-5 border-2 transition-all">
+                    <div class="flex items-start gap-3">
+                        <div id="feedbackIconBox" class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-2xl"></div>
+                        <div class="flex-1">
+                            <h4 id="feedbackTitle" class="font-display text-lg sm:text-xl"></h4>
+                            <p id="feedbackExplanation" class="text-sm sm:text-base text-slate-700 mt-1 leading-relaxed"></p>
+                        </div>
+                    </div>
+                    <button id="nextQuestionBtn" onclick="app.nextQuestion()" class="w-full mt-4 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-display text-lg tracking-wide transition-all flex items-center justify-center gap-2">
+                        <span>다음 문제</span>
+                        <i class="ph-bold ph-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. QUIZ RESULT SCREEN -->
+        <section id="view-result" class="hidden max-w-2xl w-full mx-auto space-y-6 py-4">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-10 text-center relative overflow-hidden">
+                <div id="resultBadgeIcon" class="w-24 h-24 rounded-3xl mx-auto flex items-center justify-center text-5xl mb-4 shadow-md"></div>
+                <span id="resultChapterTag" class="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold mb-2"></span>
+                <h2 id="resultTitle" class="font-display text-3xl sm:text-4xl text-slate-800">참 잘했어요!</h2>
+                <p id="resultSubtitle" class="text-slate-500 mt-1 text-sm sm:text-base"></p>
+
+                <!-- Score Box -->
+                <div class="grid grid-cols-3 gap-3 my-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div>
+                        <div class="text-xs text-slate-400 font-bold">총 점수</div>
+                        <div id="resultScoreText" class="font-display text-2xl sm:text-3xl text-brand-600 mt-1">100점</div>
+                    </div>
+                    <div class="border-x border-slate-200">
+                        <div class="text-xs text-slate-400 font-bold">맞힌 개수</div>
+                        <div id="resultCorrectCountText" class="font-display text-2xl sm:text-3xl text-slate-800 mt-1">10 / 10</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400 font-bold">소요 시간</div>
+                        <div id="resultTimeText" class="font-display text-2xl sm:text-3xl text-amber-600 mt-1">45초</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button id="retryWrongBtn" onclick="app.retryWrongQuestions()" class="hidden flex-1 py-3.5 px-5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-display text-lg shadow-md items-center justify-center gap-2">
+                        <i class="ph-bold ph-arrows-clockwise"></i>
+                        <span>틀린 문제만 다시 풀기</span>
+                    </button>
+                    <button onclick="app.showChaptersView()" class="flex-1 py-3.5 px-5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-display text-lg shadow-md flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-list-dashes"></i>
+                        <span>다른 단원 공부하기</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Review List (Correct & Incorrect Review) -->
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                <h3 class="font-display text-xl text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="ph-fill ph-notebook text-brand-600"></i>
+                    <span>문제 풀이 확인 및 오답 노트</span>
+                </h3>
+                <div id="resultReviewList" class="space-y-3">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. TEACHER MANAGEMENT DASHBOARD -->
+        <section id="view-teacher" class="hidden space-y-6">
+            <!-- Header bar -->
+            <div class="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-bold mb-2">
+                        <i class="ph-fill ph-shield-check"></i> 교사용 학습 관리 시스템
+                    </div>
+                    <h2 class="font-display text-2xl sm:text-3xl">학생 맞춤법 학습 현황 대시보드</h2>
+                    <p class="text-slate-300 text-sm mt-1">학생들이 학습한 1장~5장 퀴즈 결과, 단원별 성취도, 자주 틀리는 어휘를 한눈에 관리하세요.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <button onclick="app.loadDemoStudentRecords()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors">
+                        <i class="ph-bold ph-magic-wand text-amber-400"></i>
+                        <span>예시 학생 데이터 추가</span>
+                    </button>
+                    <button onclick="app.exportRecordsToCSV()" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-colors">
+                        <i class="ph-bold ph-download-simple"></i>
+                        <span>엑셀(CSV) 내보내기</span>
+                    </button>
+                    <button onclick="app.navigateHome()" class="px-4 py-2.5 rounded-xl bg-white text-slate-900 hover:bg-slate-100 text-xs sm:text-sm font-bold flex items-center gap-1.5">
+                        <i class="ph-bold ph-student"></i>
+                        <span>학생 화면으로</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary KPI Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-xs font-bold">참여 학생 수</span>
+                        <i class="ph-fill ph-users text-xl text-brand-500"></i>
+                    </div>
+                    <div id="statUniqueStudents" class="font-display text-2xl sm:text-3xl text-slate-800">0명</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-xs font-bold">총 학습(퀴즈) 횟수</span>
+                        <i class="ph-fill ph-check-square-offset text-xl text-blue-500"></i>
+                    </div>
+                    <div id="statTotalAttempts" class="font-display text-2xl sm:text-3xl text-slate-800">0회</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-xs font-bold">학급 전체 평균 점수</span>
+                        <i class="ph-fill ph-chart-line-up text-xl text-amber-500"></i>
+                    </div>
+                    <div id="statAverageScore" class="font-display text-2xl sm:text-3xl text-slate-800">0점</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-xs font-bold">가장 취약한 단원</span>
+                        <i class="ph-fill ph-warning-circle text-xl text-rose-500"></i>
+                    </div>
+                    <div id="statWeakestChapter" class="font-display text-lg sm:text-xl text-rose-600 truncate mt-1">-</div>
+                </div>
+            </div>
+
+            <!-- Chapter Mastery Breakdown & Top Missed Words -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Chapter Avg Chart -->
+                <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+                    <h3 class="font-display text-lg text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="ph-fill ph-chart-bar text-brand-600"></i>
+                        <span>단원별(1장~5장) 평균 정답률</span>
+                    </h3>
+                    <div id="teacherChapterStats" class="space-y-3.5">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <!-- Most Frequently Missed Questions -->
+                <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+                    <h3 class="font-display text-lg text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="ph-fill ph-magnifying-glass-plus text-rose-500"></i>
+                        <span>학생들이 가장 많이 틀린 맞춤법 TOP 5</span>
+                    </h3>
+                    <div id="teacherTopMissedList" class="space-y-2.5">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Summary Matrix (Aggregated by Student) -->
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h3 class="font-display text-lg text-slate-800 flex items-center gap-2">
+                            <i class="ph-fill ph-user-list text-indigo-600"></i>
+                            <span>학생별 1장~5장 성취도 요약표</span>
+                        </h3>
+                        <p class="text-xs text-slate-500">각 학생의 단원별 최고 점수(또는 최근 점수)와 총 학습 횟수를 보여줍니다.</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b-2 border-slate-200 text-slate-600 bg-slate-50">
+                                <th class="py-3 px-3 rounded-tl-xl font-bold">학번</th>
+                                <th class="py-3 px-3 font-bold">이름</th>
+                                <th class="py-3 px-3 font-bold text-center">단어장 학습<br><span class="text-[11px] font-normal text-slate-400">100개 항목 중</span></th>
+                                <th class="py-3 px-3 font-bold text-center">퀴즈 횟수</th>
+                                <th class="py-3 px-3 font-bold text-center">제1장<br><span class="text-[11px] font-normal text-slate-400">비슷한 발음</span></th>
+                                <th class="py-3 px-3 font-bold text-center">제2장<br><span class="text-[11px] font-normal text-slate-400">헷갈리는 말</span></th>
+                                <th class="py-3 px-3 font-bold text-center">제3장<br><span class="text-[11px] font-normal text-slate-400">틀리기 쉬운 말</span></th>
+                                <th class="py-3 px-3 font-bold text-center">제4장<br><span class="text-[11px] font-normal text-slate-400">외래어</span></th>
+                                <th class="py-3 px-3 font-bold text-center">제5장<br><span class="text-[11px] font-normal text-slate-400">띄어쓰기</span></th>
+                                <th class="py-3 px-3 rounded-tr-xl font-bold text-center">평균 점수</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacherStudentMatrixBody" class="divide-y divide-slate-100">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Detailed Filterable Log Table -->
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+                    <h3 class="font-display text-lg text-slate-800 flex items-center gap-2">
+                        <i class="ph-fill ph-clipboard-text text-brand-600"></i>
+                        <span>상세 학습 이력 조회 및 오답 확인</span>
+                    </h3>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Search by Student -->
+                        <div class="relative">
+                            <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="teacherFilterSearch" oninput="app.renderTeacherDashboard()" placeholder="학번 또는 이름 검색"
+                                class="pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:border-brand-500 focus:outline-none">
+                        </div>
+                        <!-- Filter by Chapter -->
+                        <select id="teacherFilterChapter" onchange="app.renderTeacherDashboard()" class="py-2 px-3 rounded-xl border border-slate-200 text-sm bg-white focus:border-brand-500 focus:outline-none">
+                            <option value="ALL">전체 단원 (1장~5장)</option>
+                            <option value="1">제1장: 발음이 비슷한 말</option>
+                            <option value="2">제2장: 헷갈리는 말</option>
+                            <option value="3">제3장: 틀리기 쉬운 말</option>
+                            <option value="4">제4장: 잘못 쓰는 외래어</option>
+                            <option value="5">제5장: 꼭 알아야 할 띄어쓰기</option>
+                            <option value="ALL_MIX">맞춤법 종합 문제</option>
+                        </select>
+                        <!-- Clear All Button -->
+                        <button onclick="app.confirmClearAllRecords()" class="px-3 py-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold flex items-center gap-1">
+                            <i class="ph-bold ph-trash"></i> 전체 기록 초기화
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b-2 border-slate-200 text-slate-600 bg-slate-50">
+                                <th class="py-3 px-3 rounded-tl-xl font-bold">일시</th>
+                                <th class="py-3 px-3 font-bold">학번</th>
+                                <th class="py-3 px-3 font-bold">이름</th>
+                                <th class="py-3 px-3 font-bold">학습 단원</th>
+                                <th class="py-3 px-3 font-bold text-center">점수</th>
+                                <th class="py-3 px-3 font-bold text-center">정답/문항</th>
+                                <th class="py-3 px-3 font-bold">틀린 문제 (오답 노트)</th>
+                                <th class="py-3 px-3 rounded-tr-xl font-bold text-center">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacherLogTableBody" class="divide-y divide-slate-100">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Modal Container (No alert/confirm used) -->
+    <div id="customModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-100 animate-fade-in">
+            <div class="flex items-center gap-3 mb-3">
+                <div id="modalIcon" class="w-11 h-11 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center text-2xl shrink-0">
+                    <i class="ph-fill ph-info"></i>
+                </div>
+                <h3 id="modalTitle" class="font-display text-xl text-slate-800">알림</h3>
+            </div>
+            <div id="modalBody" class="text-slate-600 text-sm sm:text-base leading-relaxed mb-6"></div>
+            <div id="modalInputWrapper" class="hidden mb-5">
+                <input type="password" id="modalPinInput" placeholder="선생님 비밀번호 입력 (기본: 1234)"
+                    class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-brand-500 focus:outline-none text-base">
+                <p class="text-xs text-slate-400 mt-1.5">* 초기 비밀번호는 <strong>1234</strong> 입니다.</p>
+            </div>
+            <div class="flex items-center justify-end gap-2.5">
+                <button id="modalCancelBtn" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold">취소</button>
+                <button id="modalConfirmBtn" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-sm">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-5 text-center text-xs text-slate-400 border-t border-slate-200/60 bg-white/50 mt-auto">
+        <p>다문화 학생을 위한 바른 한국어 맞춤법 교실 • 제1장~제5장 교재 완벽 수록</p>
+    </footer>
+
+    <!-- Application Data & Logic -->
+    <script>
+        /**
+         * Complete Database from the attached textbook table of contents (Items 01 ~ 100 across 5 Chapters)
+         * Designed specifically with clear, everyday contexts and easy explanations for multicultural students.
+         */
+        const CHAPTER_META = [
+            {
+                id: 1,
+                title: "제1장 발음이 비슷한 말",
+                subtitle: "01. 모래, 모레 ~ 20. 빗다, 빚다",
+                desc: "소리는 비슷하지만 뜻과 글자가 다른 낱말을 구별해요.",
+                icon: "ph-ear",
+                color: "emerald",
+                badgeBg: "bg-emerald-100 text-emerald-800",
+                cardBorder: "hover:border-emerald-400"
+            },
+            {
+                id: 2,
+                title: "제2장 헷갈리는 말",
+                subtitle: "21. 안, 못 ~ 40. 벌이다, 벌리다",
+                desc: "상황에 따라 알맞게 골라 써야 하는 낱말을 익혀요.",
+                icon: "ph-arrows-split",
+                color: "amber",
+                badgeBg: "bg-amber-100 text-amber-800",
+                cardBorder: "hover:border-amber-400"
+            },
+            {
+                id: 3,
+                title: "제3장 틀리기 쉬운 말",
+                subtitle: "41. 시월 ~ 60. 드러나다",
+                desc: "일상생활에서 자주 틀리는 올바른 맞춤법을 배워요.",
+                icon: "ph-check-circle",
+                color: "blue",
+                badgeBg: "bg-blue-100 text-blue-800",
+                cardBorder: "hover:border-blue-400"
+            },
+            {
+                id: 4,
+                title: "제4장 잘못 쓰는 외래어",
+                subtitle: "61. 초콜릿 ~ 80. 리더십",
+                desc: "외국에서 온 말을 한국어 표기법에 맞게 바르게 써요.",
+                icon: "ph-globe-hemisphere-west",
+                color: "purple",
+                badgeBg: "bg-purple-100 text-purple-800",
+                cardBorder: "hover:border-purple-400"
+            },
+            {
+                id: 5,
+                title: "제5장 꼭 알아야 할 띄어쓰기",
+                subtitle: "81. 띄어 쓰는 명 ~ 100. 띄어 쓰는 뿐",
+                desc: "의존명사와 조사를 구별하여 띄어쓰기 달인이 되어 봐요.",
+                icon: "ph-text-columns",
+                color: "rose",
+                badgeBg: "bg-rose-100 text-rose-800",
+                cardBorder: "hover:border-rose-400"
+            },
+            {
+                id: "ALL_MIX",
+                title: "맞춤법 종합 실전 문제",
+                subtitle: "제1장 ~ 제5장 전체 총정리",
+                desc: "1장부터 5장까지 배운 모든 맞춤법을 골고루 테스트해요!",
+                icon: "ph-trophy",
+                color: "indigo",
+                badgeBg: "bg-indigo-100 text-indigo-800",
+                cardBorder: "hover:border-indigo-400"
+            }
+        ];
+
+        const QUESTION_BANK = [
+            // ================= 제1장: 발음이 비슷한 말 (01 ~ 20) =================
+            { id: 1, chapter: 1, num: "01", topic: "모래, 모레", sentence: "바닷가에서 부드러운 [___]로 성을 쌓았어요.", answer: "모래", options: ["모래", "모레"], hint: "바닷가나 운동장에 있는 아주 작은 돌알갱이예요.", exp: "'모래'는 잘디잔 돌 부스러기이고, '모레'는 내일의 다음 날을 뜻해요." },
+            { id: 2, chapter: 1, num: "02", topic: "덥다, 덮다", sentence: "밤에 공기가 차가우니 이불을 꼭 [___] 자야 해요.", answer: "덮고", options: ["덥고", "덮고"], hint: "이불이나 뚜껑을 위에 포개어 씌우다라는 뜻이에요.", exp: "'덮다'는 이불이나 뚜껑을 씌울 때 쓰고, '덥다'는 여름처럼 기온이 높을 때 써요." },
+            { id: 3, chapter: 1, num: "03", topic: "이따가, 있다가", sentence: "지금은 바쁘니까 우리 조금 [___] 다시 만나자.", answer: "이따가", options: ["이따가", "있다가"], hint: "'조금 지난 뒤에'라는 뜻이에요.", exp: "조금 지난 뒤를 뜻할 때는 '이따가', 한 장소에 머물러 있을 때는 '여기 있다가'처럼 써요." },
+            { id: 4, chapter: 1, num: "04", topic: "맞다, 맡다", sentence: "봄꽃에서 아주 향기로운 냄새를 [___].", answer: "맡았다", options: ["맞았다", "맡았다"], hint: "코로 냄새를 느끼는 행동이에요.", exp: "코로 냄새를 느끼거나 어떤 일을 책임질 때는 '맡다(맡았다)'를 써요." },
+            { id: 5, chapter: 1, num: "05", topic: "때, 떼", sentence: "밖에 나갔다 왔더니 손에 까만 [___]가 묻었어요.", answer: "때", options: ["때", "떼"], hint: "몸이나 옷에 묻은 더러운 먼지나 찌꺼기예요.", exp: "'때'는 피부나 옷에 묻은 더러운 것이나 시간을 뜻하고, '떼'는 여럿이 모인 무리나 억지를 부릴 때 써요." },
+            { id: 6, chapter: 1, num: "06", topic: "매다, 메다", sentence: "아침에 어깨에 책가방을 [___] 학교에 갑니다.", answer: "메고", options: ["매고", "메고"], hint: "어깨에 가방이나 짐을 걸치는 행동이에요.", exp: "어깨에 가방을 걸칠 때는 '메다(메고)', 신발 끈이나 넥타이를 묶을 때는 '매다(매고)'를 써요." },
+            { id: 7, chapter: 1, num: "07", topic: "낫다, 낮다", sentence: "약을 먹고 푹 쉬었더니 감기가 다 [___].", answer: "나았다", options: ["나았다", "낮았다"], hint: "아프던 병이나 상처가 고쳐져서 좋아졌다는 뜻이에요.", exp: "병이 고쳐지거나 더 좋을 때는 '낫다(나았다)', 높이가 아래에 있을 때는 '낮다(낮았다)'를 써요." },
+            { id: 8, chapter: 1, num: "08", topic: "업다, 없다", sentence: "엄마가 잠든 동생을 등에 [___] 집으로 걸어가셨어요.", answer: "업고", options: ["업고", "없고"], hint: "아기나 사람을 등에 매달리게 하는 행동이에요.", exp: "등에 사람을 태울 때는 '업다(업고)', 아무것도 존재하지 않을 때는 '없다(없고)'를 써요." },
+            { id: 9, chapter: 1, num: "09", topic: "부치다, 붙이다", sentence: "할머니께 드릴 편지를 우체국에서 [___].", answer: "부쳤다", options: ["부쳤다", "붙였다"], hint: "편지나 택배 물건을 상대방에게 보내는 일이에요.", exp: "편지나 짐을 보낼 때는 '부치다', 풀이나 테이프로 떨어지지 않게 할 때는 '붙이다'를 써요." },
+            { id: 10, chapter: 1, num: "10", topic: "시키다, 식히다", sentence: "국물이 너무 뜨거우니 후후 불어서 [___] 먹으렴.", answer: "식혀", options: ["시켜", "식혀"], hint: "뜨거운 것을 차갑게 만드는 행동이에요.", exp: "뜨거운 열기를 차게 만들 때는 '식히다(식혀)', 일을 하게 하거나 음식을 주문할 때는 '시키다(시켜)'를 써요." },
+            { id: 11, chapter: 1, num: "11", topic: "빗, 빚, 빛", sentence: "아침에 일어나 거울을 보며 [___]으로 머리를 단정하게 빗었어요.", answer: "빗", options: ["빗", "빚", "빛"], hint: "머리카락을 가지런히 정리할 때 쓰는 도구예요.", exp: "머리 손질 도구는 '빗', 갚아야 할 돈은 '빚', 밝게 비추는 것은 '빛'이에요." },
+            { id: 12, chapter: 1, num: "12", topic: "다치다, 닫히다", sentence: "바람이 세게 불어서 열려 있던 창문이 저절로 [___].", answer: "닫혔다", options: ["다쳤다", "닫혔다"], hint: "열려 있던 문이나 창문이 막히게 되었다는 뜻이에요.", exp: "문이 닫아진 상태는 '닫히다(닫혔다)', 몸에 상처가 난 것은 '다치다(다쳤다)'예요." },
+            { id: 13, chapter: 1, num: "13", topic: "낫, 낮, 낯", sentence: "처음 만난 친구 앞이라 아직 [___]이 설어서 부끄러워요.", answer: "낯", options: ["낫", "낮", "낯"], hint: "사람의 얼굴을 뜻하는 말이에요.", exp: "얼굴은 '낯', 풀을 베는 농기구는 '낫', 해가 떠 있는 밝은 시간은 '낮'이에요." },
+            { id: 14, chapter: 1, num: "14", topic: "짓다, 짖다", sentence: "낯선 사람이 지나가자 강아지가 멍멍 소리를 내며 [___].", answer: "짖었다", options: ["지었다", "짖었다"], hint: "개가 소리를 크게 내는 행동이에요.", exp: "개가 소리를 낼 때는 '짖다(짖었다)', 밥이나 집, 이름을 만들 때는 '짓다(지었다)'를 써요." },
+            { id: 15, chapter: 1, num: "15", topic: "반드시, 반듯이", sentence: "친구와 한 약속은 무슨 일이 있어도 [___] 지켜야 해요.", answer: "반드시", options: ["반드시", "반듯이"], hint: "'꼭, 틀림없이'라는 뜻이에요.", exp: "'꼭, 틀림없이'는 '반드시'이고, 모양이나 자세가 삐뚤어지지 않고 바른 상태는 '반듯이'예요." },
+            { id: 16, chapter: 1, num: "16", topic: "젓다, 젖다", sentence: "우산을 안 가져가서 비에 옷이 흠뻑 [___].", answer: "젖었다", options: ["저었다", "젖었다"], hint: "물기가 스며들어 축축하게 되는 상태예요.", exp: "물이 스며들어 축축해질 때는 '젖다(젖었다)', 숟가락으로 국물을 돌리며 섞을 때는 '젓다(저었다)'를 써요." },
+            { id: 17, chapter: 1, num: "17", topic: "갖다, 같다", sentence: "내 필통과 동생 필통은 모양과 색깔이 똑[___].", answer: "같다", options: ["갖다", "같다"], hint: "서로 다르지 않고 하나처럼 비슷하다는 뜻이에요.", exp: "서로 다르지 않을 때는 '같다', 손에 들거나 소유할 때는 '가지다(갖다)'를 써요." },
+            { id: 18, chapter: 1, num: "18", topic: "새다, 세다", sentence: "저금통에 모은 동전이 모두 몇 개인지 하나씩 [___] 보았다.", answer: "세어", options: ["새어", "세어"], hint: "숫자를 하나, 둘, 셋 헤아려 본다는 뜻이에요.", exp: "수를 헤아릴 때는 '세다(세어)', 물이나 빛이 틈으로 빠져나갈 때는 '새다(새어)'를 써요." },
+            { id: 19, chapter: 1, num: "19", topic: "지그시, 지긋이", sentence: "아름다운 음악 소리를 들으며 눈을 [___] 감았어요.", answer: "지그시", options: ["지그시", "지긋이"], hint: "힘을 주지 않고 살며시 눈을 감는 모양이에요.", exp: "눈을 살며시 감거나 고통을 참고 견딜 때는 '지그시', 나이가 꽤 많이 들었을 때는 '지긋이'를 써요." },
+            { id: 20, chapter: 1, num: "20", topic: "빗다, 빚다", sentence: "추석에 온 가족이 모여 예쁜 반달 모양 송편을 [___].", answer: "빚었다", options: ["빗었다", "빚었다"], hint: "밀가루나 쌀가루 반죽을 손으로 주물러 만두나 떡을 만드는 행동이에요.", exp: "떡이나 만두, 도자기를 만들 때는 '빚다(빚었다)', 머리카락을 정리할 때는 '빗다(빗었다)'를 써요." },
+
+            // ================= 제2장: 헷갈리는 말 (21 ~ 40) =================
+            { id: 21, chapter: 2, num: "21", topic: "안, 못", sentence: "오늘 아침에 배가 너무 아파서 밥을 먹지 [___]했어요.", answer: "못", options: ["안", "못"], hint: "하고 싶어도 아파서 할 수 없는 상황이에요.", exp: "능력이 부족하거나 다른 이유 때문에 할 수 없을 때는 '못'을 쓰고, 스스로 하기 싫어 하지 않을 때는 '안'을 써요." },
+            { id: 22, chapter: 2, num: "22", topic: "작다, 적다", sentence: "작년에 입던 옷이 이제는 몸이 자라서 너무 [___].", answer: "작다", options: ["작다", "적다"], hint: "길이, 넓이, 부피 등 크기가 크지 않다는 뜻이에요.", exp: "크기나 키가 크지 않을 때는 '작다', 숫자나 양이 많지 않을 때는 '적다'를 써요." },
+            { id: 23, chapter: 2, num: "23", topic: "빨리, 일찍", sentence: "내일 소풍에 늦지 않으려면 오늘 밤에는 [___] 자야 해.", answer: "일찍", options: ["빨리", "일찍"], hint: "정해진 시간보다 이르게 행동한다는 뜻이에요.", exp: "시각이 이른 때를 말할 때는 '일찍', 움직이는 속도가 급할 때는 '빨리'를 써요." },
+            { id: 24, chapter: 2, num: "24", topic: "느리다, 늦다", sentence: "거북이는 토끼보다 걸어가는 속도가 [___].", answer: "느리다", options: ["느리다", "늦다"], hint: "움직이는 속도가 빠르지 않다는 뜻이에요.", exp: "움직이는 속도가 빠르지 않을 때는 '느리다', 정해진 약속 시간을 넘겼을 때는 '늦다'를 써요." },
+            { id: 25, chapter: 2, num: "25", topic: "가르치다, 가리키다", sentence: "선생님께서 칠판에 적힌 글자를 손가락으로 [___].", answer: "가리키셨다", options: ["가르치셨다", "가리키셨다"], hint: "손가락 등으로 어떤 방향이나 대상을 콕 집어 보이는 행동이에요.", exp: "방향이나 대상을 손가락으로 짚을 때는 '가리키다', 지식이나 공부 내용을 알려 줄 때는 '가르치다'를 써요." },
+            { id: 26, chapter: 2, num: "26", topic: "다르다, 틀리다", sentence: "나와 내 단짝 친구는 좋아하는 음식 취향이 서로 [___].", answer: "다르다", options: ["다르다", "틀리다"], hint: "맞고 틀린 문제가 아니라, 서로 같지 않고 차이가 있다는 뜻이에요.", exp: "서로 비교해 보아 같지 않을 때는 '다르다', 계산이나 정답이 맞지 않을 때는 '틀리다'를 써요." },
+            { id: 27, chapter: 2, num: "27", topic: "잃다, 잊다", sentence: "친구와 약속한 시간을 깜빡 [___] 버려서 미안했어요.", answer: "잊어", options: ["잃어", "잊어"], hint: "기억하고 있던 생각을 머릿속에서 기억하지 못하게 된 것이에요.", exp: "생각이나 기억이 나지 않을 때는 '잊다(잊어)', 가방이나 우산 같은 물건을 놓쳐 없어진 때는 '잃다(잃어)'를 써요." },
+            { id: 28, chapter: 2, num: "28", topic: "들리다, 들르다", sentence: "집에 가는 길에 문구점에 잠깐 [___] 공책을 샀어요.", answer: "들러서", options: ["들려서", "들러서"], hint: "지나가는 길에 어느 장소에 잠깐 들어가 머무른다는 뜻이에요.", exp: "지나가는 길에 잠깐 방문할 때는 '들르다(들러서)', 소리가 귀에 들어올 때는 '들리다(들려서)'를 써요." },
+            { id: 29, chapter: 2, num: "29", topic: "맞추다, 맞히다", sentence: "선생님이 내신 어려운 수수께끼의 정답을 내가 [___]!", answer: "맞혔다", options: ["맞추었다", "맞혔다"], hint: "문제의 정답을 틀리지 않게 골라냈다는 뜻이에요.", exp: "퀴즈나 시험 문제의 정답을 골라낼 때는 '맞히다(맞혔다)', 퍼즐 조각이나 줄을 나란히 할 때는 '맞추다'를 써요." },
+            { id: 30, chapter: 2, num: "30", topic: "바라다, 바래다", sentence: "새해에는 우리 가족 모두 건강하기를 마음속으로 [___].", answer: "바란다", options: ["바란다", "바랜다"], hint: "생각대로 이루어지기를 소망한다는 뜻이에요.", exp: "소원을 원할 때는 '바라다(바란다, 바라고)', 햇볕에 색깔이 흐려질 때는 '바래다'를 써요." },
+            { id: 31, chapter: 2, num: "31", topic: "-장이, -쟁이", sentence: "내 동생은 장난을 아주 좋아하는 귀여운 개구[___]예요.", answer: "쟁이", options: ["장이", "쟁이"], hint: "성격이나 습관, 행동이 많이 나타나는 사람에게는 '-쟁이'를 붙여요.", exp: "성격이나 버릇을 나타낼 때는 '개구쟁이, 겁쟁이, 욕심쟁이', 전문 기술을 가진 장인은 '대장장이, 미장이'처럼 '-장이'를 써요." },
+            { id: 32, chapter: 2, num: "32", topic: "담다, 담그다", sentence: "겨울이 오기 전에 할머니와 함께 맛있는 김치를 [___].", answer: "담갔다", options: ["담았다", "담갔다"], hint: "김치, 고추장, 매실청 등을 양념에 버무려 익히려고 만드는 일이에요.", exp: "김치나 장을 만들거나 물에 넣을 때는 '담그다(담갔다)', 그릇이나 바구니에 물건을 넣을 때는 '담다(담았다)'를 써요." },
+            { id: 33, chapter: 2, num: "33", topic: "한참, 한창", sentence: "봄이 되어 공원에 벚꽃이 지금 [___] 예쁘게 피어 있어요.", answer: "한창", options: ["한참", "한창"], hint: "어떤 일이 가장 활기차고 왕성하게 일어나는 때를 뜻해요.", exp: "가장 왕성할 때는 '한창', 시간이 꽤 오래 걸릴 때는 '한참(한참을 기다렸다)'을 써요." },
+            { id: 34, chapter: 2, num: "34", topic: "젖히다, 제치다", sentence: "달리기 시합에서 앞선 선수들을 모두 [___] 1등으로 들어왔어요.", answer: "제치고", options: ["젖히고", "제치고"], hint: "경쟁 상대방을 이기고 앞서 나간다는 뜻이에요.", exp: "상대를 이기고 넘어설 때는 '제치다(제치고)', 고개나 몸을 뒤로 기울일 때는 '젖히다(젖히고)'를 써요." },
+            { id: 35, chapter: 2, num: "35", topic: "골다, 곪다", sentence: "넘어져서 다친 무릎 상처에 염증이 생겨 노랗게 [___].", answer: "곪았다", options: ["골았다", "곪았다"], hint: "상처에 고름이 차서 붓고 아픈 상태예요.", exp: "상처에 고름이 생길 때는 '곪다(곪았다)', 잠을 자면서 코에서 소리가 날 때는 '코를 골다(골았다)'를 써요." },
+            { id: 36, chapter: 2, num: "36", topic: "껍데기, 껍질", sentence: "달콤한 사과와 귤의 부드러운 [___]을 벗겨서 먹었어요.", answer: "껍질", options: ["껍데기", "껍질"], hint: "과일이나 채소를 감싸고 있는 단단하지 않은 겉 부분이에요.", exp: "과일이나 나무의 무른 겉 부분은 '껍질', 조개나 달걀처럼 딱딱한 겉 부분은 '껍데기'라고 해요." },
+            { id: 37, chapter: 2, num: "37", topic: "비추다, 비치다", sentence: "어두운 방 안을 손전등으로 환하게 [___].", answer: "비추었다", options: ["비추었다", "비치었다"], hint: "빛을 어떤 대상에게 보내어 밝게 만든다는 뜻이에요.", exp: "손전등이나 거울을 어디에 향하게 할 때는 '비추다', 맑은 물이나 유리에 그림자가 보일 때는 '비치다'를 써요." },
+            { id: 38, chapter: 2, num: "38", topic: "부수다, 부시다", sentence: "모래성을 쌓았다가 손으로 와르르 [___] 다시 만들었어요.", answer: "부수고", options: ["부수고", "부시고"], hint: "만들어 놓은 물건을 깨뜨려 무너뜨리는 행동이에요.", exp: "물건을 깨뜨려 망가뜨릴 때는 '부수다(부수고)', 그릇을 물로 깨끗이 씻거나 빛이 강할 때는 '부시다'를 써요." },
+            { id: 39, chapter: 2, num: "39", topic: "늘이다, 늘리다", sentence: "매일 책을 읽어서 내가 아는 한국어 단어 수를 [___].", answer: "늘렸다", options: ["늘였다", "늘렸다"], hint: "수나 양, 실력이 이전보다 더 많아지게 만든다는 뜻이에요.", exp: "양이나 숫자, 실력을 많아지게 할 때는 '늘리다(늘렸다)', 고무줄이나 엿가락의 길이를 길게 당길 때는 '늘이다(늘였다)'를 써요." },
+            { id: 40, chapter: 2, num: "40", topic: "벌이다, 벌리다", sentence: "치과 의사 선생님 앞에서 입을 아 하고 크게 [___].", answer: "벌렸다", options: ["벌였다", "벌렸다"], hint: "입이나 두 팔의 사이를 넓게 떼어 놓는 행동이에요.", exp: "입이나 팔다리의 간격을 넓힐 때는 '벌리다(벌렸다)', 잔치나 행사, 일을 시작할 때는 '벌이다(벌였다)'를 써요." },
+
+            // ================= 제3장: 틀리기 쉬운 말 (41 ~ 60) =================
+            { id: 41, chapter: 3, num: "41", topic: "시월 O, 십월 X", sentence: "가을 단풍이 아름답게 물드는 10월은 한글로 '[___]'이라고 읽고 써요.", answer: "시월", options: ["시월", "십월"], hint: "6월(유월)과 10월은 발음하기 쉽게 받침을 빼고 불러요.", exp: "10월은 '십월'이 아니라 '시월'이 올바른 표준어예요. (6월도 '유월'이 맞아요!)" },
+            { id: 42, chapter: 3, num: "42", topic: "며칠 O, 몇일 X", sentence: "오늘이 몇 월 [___]인지 달력을 확인해 보았어요.", answer: "며칠", options: ["며칠", "몇일"], hint: "날짜를 물어보거나 며칠 동안이라고 할 때 쓰는 말이에요.", exp: "'몇일'은 틀린 표기이고, 언제나 소리 나는 대로 '며칠'이라고 써야 맞아요." },
+            { id: 43, chapter: 3, num: "43", topic: "열심히 O, 열심이 X", sentence: "꿈을 이루기 위해 매일 [___] 공부하고 연습해요.", answer: "열심히", options: ["열심히", "열심이"], hint: "정성을 다하여 부지런하게 행동하는 모양이에요.", exp: "'열심' 뒤에 '-히'가 붙은 '열심히'가 올바른 맞춤법이에요." },
+            { id: 44, chapter: 3, num: "44", topic: "깨끗이 O, 깨끗히 X", sentence: "밥을 먹기 전에 비누로 손을 [___] 씻어야 해요.", answer: "깨끗이", options: ["깨끗이", "깨끗히"], hint: "'깨끗하다'의 어근 끝소리가 'ㅅ' 받침일 때는 뒤에 '이'가 와요.", exp: "'ㅅ' 받침 뒤에는 '-이'를 붙여요. 따라서 '깨끗히'가 아니라 '깨끗이'가 맞아요." },
+            { id: 45, chapter: 3, num: "45", topic: "인사말 O, 인삿말 X", sentence: "아침에 선생님을 만나면 밝은 목소리로 [___]을 건네요.", answer: "인사말", options: ["인사말", "인삿말"], hint: "'인사'와 '말'이 합쳐진 단어로 사이시옷(ㅅ)을 넣지 않아요.", exp: "'인사말', '머리말', '예사말'은 사이시옷을 넣지 않고 그대로 적는 것이 맞아요." },
+            { id: 46, chapter: 3, num: "46", topic: "수돗물 O, 수도물 X", sentence: "양치질을 할 때는 [___]을 틀어 놓고 쓰지 말고 컵을 사용해요.", answer: "수돗물", options: ["수돗물", "수도물"], hint: "[수돈물]처럼 덧나는 소리가 나서 사이시옷(ㅅ)을 적어요.", exp: "한자어 '수도(水道)'와 고유어 '물'이 합쳐져 [수돈물]로 소리 나므로 사이시옷을 넣어 '수돗물'로 써요." },
+            { id: 47, chapter: 3, num: "47", topic: "오랜만 O, 오랫만 X", sentence: "방학이 끝나고 친구들을 정말 [___]에 만나서 반가웠어요.", answer: "오랜만", options: ["오랜만", "오랫만"], hint: "'오래간만'이 줄어든 말이에요.", exp: "'오래간만'의 줄임말이므로 '오랜만'이 맞아요. ('오랫동안'과 헷갈리지 마세요!)" },
+            { id: 48, chapter: 3, num: "48", topic: "설거지 O, 설겆이 X", sentence: "저녁 식사가 끝난 뒤 부모님을 도와 그릇 [___]를 했어요.", answer: "설거지", options: ["설거지", "설겆이"], hint: "먹고 난 뒤 그릇을 깨끗하게 씻어 정리하는 일이에요.", exp: "소리 나는 대로 적는 '설거지'가 올바른 맞춤법이에요." },
+            { id: 49, chapter: 3, num: "49", topic: "찌개 O, 찌게 X", sentence: "오늘 저녁 반찬은 두부가 듬뿍 들어간 따뜻한 된장[___]예요.", answer: "찌개", options: ["찌개", "찌게"], hint: "김치나 된장을 넣고 끓인 한국 음식이에요. '개'를 써요.", exp: "'김치찌개', '된장찌개'처럼 'ㅐ' 모음을 쓴 '찌개'가 맞아요." },
+            { id: 50, chapter: 3, num: "50", topic: "휴게소 O, 휴계소 X", sentence: "고속도로를 달리다가 화장실에 가려고 [___]에 들렀어요.", answer: "휴게소", options: ["휴게소", "휴계소"], hint: "잠시 쉬어 가는 장소라는 뜻이에요.", exp: "쉬는 장소를 뜻하는 한자어 표기는 '휴게소(休憩所)'가 맞아요." },
+            { id: 51, chapter: 3, num: "51", topic: "발자국 O, 발자욱 X", sentence: "하얀 눈이 내린 운동장 위에 강아지 [___]이 찍혀 있어요.", answer: "발자국", options: ["발자국", "발자욱"], hint: "발로 밟은 자리에 남은 흔적이에요.", exp: "'발자욱'은 비표준어이고, '발자국'이 올바른 표준어예요." },
+            { id: 52, chapter: 3, num: "52", topic: "베개 O, 베게 X", sentence: "잠자리에 누워 푹신한 [___]에 머리를 대고 잠이 들었어요.", answer: "베개", options: ["베개", "베게"], hint: "잠잘 때 머리 아래에 받치는 물건이에요.", exp: "'베다'에 '-개'가 붙은 말로, 앞은 'ㅔ', 뒤는 'ㅐ'인 '베개'가 맞아요." },
+            { id: 53, chapter: 3, num: "53", topic: "웃어른 O, 윗어른 X", sentence: "버스나 지하철에서는 [___]께 자리를 양보하는 것이 예의예요.", answer: "웃어른", options: ["웃어른", "윗어른"], hint: "나이가 많으신 어른을 높여 부르는 말이에요.", exp: "아래위 대립이 없는 단어 앞에는 '웃-'을 써서 '웃어른'이라고 하는 것이 맞아요." },
+            { id: 54, chapter: 3, num: "54", topic: "역할 O, 역활 X", sentence: "모둠 과제를 할 때 친구들과 각자 맡을 [___]을 나누었어요.", answer: "역할", options: ["역할", "역활"], hint: "자기가 마땅히 해야 할 임무나 할 일을 뜻해요.", exp: "'역활'이 아니라 '할 일'을 뜻하는 '역할(役割)'이 올바른 표기예요." },
+            { id: 55, chapter: 3, num: "55", topic: "설렘 O, 설레임 X", sentence: "내일 놀이공원에 갈 생각에 가슴이 두근거리는 [___]을 느꼈어요.", answer: "설렘", options: ["설렘", "설레임"], hint: "기본형이 '설레다'이므로 'ㅁ'만 붙여 명사로 만들어요.", exp: "기본형이 '설레이다'가 아니라 '설레다'이므로 '설렘(설레다+ㅁ)'이 맞아요." },
+            { id: 56, chapter: 3, num: "56", topic: "통째로 O, 통채로 X", sentence: "잘 익은 방울토마토를 씻어서 입에 [___] 넣고 먹었어요.", answer: "통째로", options: ["통째로", "통채로"], hint: "나누거나 자르지 않고 덩어리 전체 그대로라는 뜻이에요.", exp: "'통' 뒤에 '그대로 전부'를 뜻하는 '-째'가 붙어 '통째로'라고 써요." },
+            { id: 57, chapter: 3, num: "57", topic: "일부러 O, 일부로 X", sentence: "실수로 친구 발을 밟았지, 절대 [___] 그런 것이 아니야.", answer: "일부러", options: ["일부러", "일부로"], hint: "마음속으로 어떤 생각을 가지고 고의로 행동할 때 쓰는 말이에요.", exp: "고의로 그럴 마음을 먹고 행동할 때는 '일부러'가 맞아요." },
+            { id: 58, chapter: 3, num: "58", topic: "어차피 O, 어짜피 X", sentence: "[___] 내일 비가 올 텐데 오늘 미리 우산을 챙겨 두자.", answer: "어차피", options: ["어차피", "어짜피"], hint: "그렇게 하든 저렇게 하든 결과는 마찬가지라는 뜻이에요.", exp: "된소리 '짜'가 아니라 예사소리 '차'를 쓰는 '어차피'가 올바른 표기예요." },
+            { id: 59, chapter: 3, num: "59", topic: "잠그다 O, 잠구다 X", sentence: "외출할 때는 현관문과 수도꼭지를 단단히 [___] 나가야 해요.", answer: "잠그고", options: ["잠그고", "잠구고"], hint: "문이나 자물쇠를 열리지 않게 채우는 행동이에요.", exp: "'잠구다'는 틀린 말이고, 기본형은 '잠그다(잠그고, 잠가서)'가 맞아요." },
+            { id: 60, chapter: 3, num: "60", topic: "드러나다 O, 들어나다 X", sentence: "안개가 걷히자 멀리 있던 산의 아름다운 모습이 환하게 [___].", answer: "드러났다", options: ["드러났다", "들어났다"], hint: "가려져 있던 모습이나 사실이 밖으로 나타나 보인다는 뜻이에요.", exp: "숨겨진 것이 밖으로 나타날 때는 소리 나는 대로 '드러나다(드러났다)'라고 써요." },
+
+            // ================= 제4장: 잘못 쓰는 외래어 (61 ~ 80) =================
+            { id: 61, chapter: 4, num: "61", topic: "초콜릿 O, 초콜렛 X", sentence: "생일 선물로 달콤한 [___] 한 상자를 받았어요.", answer: "초콜릿", options: ["초콜릿", "초콜렛"], hint: "카카오로 만든 달콤한 간식이에요. 끝 글자가 '릿'이에요.", exp: "외래어 표기법에 따라 '초콜렛'이 아니라 '초콜릿(chocolate)'이 맞아요." },
+            { id: 62, chapter: 4, num: "62", topic: "케이크 O, 케익 X", sentence: "동생의 생일을 축하하며 촛불을 켜고 [___]를 잘랐어요.", answer: "케이크", options: ["케이크", "케익"], hint: "생일이나 파티에 먹는 빵이에요. 세 글자로 표기해요.", exp: "'케익'이 아니라 '케이크(cake)'가 올바른 외래어 표기예요." },
+            { id: 63, chapter: 4, num: "63", topic: "커피숍 O, 커피숖 X", sentence: "주말에 엄마와 함께 동네 [___]에서 시원한 음료를 마셨어요.", answer: "커피숍", options: ["커피숍", "커피숖"], hint: "커피와 차를 파는 가게예요. 받침에 'ㅂ'을 써요.", exp: "외래어 받침에는 'ㅍ'을 쓰지 않고 'ㅂ'을 써요. 따라서 '커피숍(coffee shop)'이 맞아요." },
+            { id: 64, chapter: 4, num: "64", topic: "주스 O, 쥬스 X", sentence: "아침마다 신선한 오렌지 [___]를 한 잔씩 마셔요.", answer: "주스", options: ["주스", "쥬스"], hint: "'ㅈ' 뒤에는 'ㅠ' 대신 'ㅜ'를 써요.", exp: "외래어 표기법에서 'ㅈ, ㅊ' 뒤에는 이중모음(ㅑ, ㅕ, ㅛ, ㅠ)을 쓰지 않으므로 '주스(juice)'가 맞아요." },
+            { id: 65, chapter: 4, num: "65", topic: "에어컨 O, 에어콘 X", sentence: "무더운 여름날 교실에 [___]을 켜니 시원해졌어요.", answer: "에어컨", options: ["에어컨", "에어콘"], hint: "실내 공기를 시원하게 해 주는 기계예요.", exp: "'에어콘'이 아니라 '에어컨(air conditioner)'이 올바른 표기예요." },
+            { id: 66, chapter: 4, num: "66", topic: "커튼 O, 커텐 X", sentence: "햇빛이 너무 눈부셔서 창문에 달린 [___]을 쳤어요.", answer: "커튼", options: ["커튼", "커텐"], hint: "창문을 가리는 천이에요. '튼'으로 끝나요.", exp: "'커텐'은 틀린 표기이고, '커튼(curtain)'이 올바른 외래어 표기예요." },
+            { id: 67, chapter: 4, num: "67", topic: "돈가스 O, 돈까스 X", sentence: "오늘 학교 급식에 바삭바삭하고 맛있는 [___]가 나왔어요.", answer: "돈가스", options: ["돈가스", "돈까스"], hint: "외래어를 적을 때는 된소리(ㄲ, ㄸ, ㅃ, ㅆ, ㅉ)를 쓰지 않아요.", exp: "외래어 표기 원칙에 따라 된소리 '까' 대신 예사소리 '가'를 써서 '돈가스'로 적어요." },
+            { id: 68, chapter: 4, num: "68", topic: "수프 O, 스프 X", sentence: "식사 전에 따뜻하고 부드러운 옥수수 [___]를 먹었어요.", answer: "수프", options: ["수프", "스프"], hint: "서양식 국물 요리예요. 첫 글자에 'ㅜ' 모음을 써요.", exp: "'스프'가 아니라 '수프(soup)'가 올바른 외래어 표기예요." },
+            { id: 69, chapter: 4, num: "69", topic: "메시지 O, 메세지 X", sentence: "스마트폰으로 친구에게 생일 축하 문자 [___]를 보냈어요.", answer: "메시지", options: ["메시지", "메세지"], hint: "가운데 글자가 '시'예요.", exp: "'메세지'가 아니라 '메시지(message)'가 올바른 표기예요." },
+            { id: 70, chapter: 4, num: "70", topic: "소파 O, 쇼파 X", sentence: "거실에 있는 푹신한 [___]에 앉아 텔레비전을 보았어요.", answer: "소파", options: ["소파", "쇼파"], hint: "거실에 놓는 긴 의자예요. 첫 글자가 '소'예요.", exp: "'쇼파'가 아니라 '소파(sofa)'가 올바른 외래어 표기예요." },
+            { id: 71, chapter: 4, num: "71", topic: "프라이팬 O, 후라이팬 X", sentence: "요리를 하기 위해 가스레인지 위에 [___]을 올렸어요.", answer: "프라이팬", options: ["프라이팬", "후라이팬"], hint: "영어의 [f] 소리는 한글로 'ㅍ'으로 적어요.", exp: "'후라이팬'은 틀린 말이고, [f] 발음을 살려 적은 '프라이팬(frypan)'이 맞아요." },
+            { id: 72, chapter: 4, num: "72", topic: "로봇 O, 로보트 X", sentence: "미래 과학관에 가서 사람처럼 걸어 다니는 [___]을 구경했어요.", answer: "로봇", options: ["로봇", "로보트"], hint: "두 글자로 적고 받침은 'ㅅ'이에요.", exp: "'로보트'가 아니라 '로봇(robot)'이 올바른 표준 외래어예요." },
+            { id: 73, chapter: 4, num: "73", topic: "센티미터 O, 센치미터 X", sentence: "자로 연필의 길이를 재어 보니 15[___]였어요.", answer: "센티미터", options: ["센티미터", "센치미터"], hint: "길이를 재는 단위(cm)예요. '티'가 들어가요.", exp: "'센치미터'가 아니라 '센티미터(centimeter)'가 올바른 표기예요." },
+            { id: 74, chapter: 4, num: "74", topic: "사인 O, 싸인 X", sentence: "좋아하는 운동선수를 만나서 공책에 멋지게 [___]을 받았어요.", answer: "사인", options: ["사인", "싸인"], hint: "외래어에는 된소리 'ㅆ' 대신 'ㅅ'을 써요.", exp: "외래어 표기에는 된소리를 쓰지 않으므로 '싸인'이 아니라 '사인(sign)'이 맞아요." },
+            { id: 75, chapter: 4, num: "75", topic: "뷔페 O, 부페 X", sentence: "주말에 가족들과 함께 여러 가지 음식을 골라 먹는 [___] 식당에 갔어요.", answer: "뷔페", options: ["뷔페", "부페"], hint: "다양한 음식을 마음껏 덜어 먹는 식당이에요. 첫 글자가 '뷔'예요.", exp: "'부페'나 '비페'가 아니라 '뷔페(buffet)'가 올바른 외래어 표기예요." },
+            { id: 76, chapter: 4, num: "76", topic: "도넛 O, 도너츠 X", sentence: "빵집에서 동그랗고 가운데 구멍이 뚫린 달콤한 [___]을 샀어요.", answer: "도넛", options: ["도넛", "도너츠"], hint: "복수형(-s)을 빼고 두 글자로 적어요.", exp: "'도너츠'가 아니라 '도넛(doughnut)'이 올바른 표기예요." },
+            { id: 77, chapter: 4, num: "77", topic: "액세서리 O, 악세서리 X", sentence: "언니는 예쁜 머리핀과 목걸이 같은 [___]를 좋아해요.", answer: "액세서리", options: ["액세서리", "악세서리"], hint: "몸을 치장하는 장신구예요. 첫 글자가 '액'이에요.", exp: "'악세서리'나 '악세사리'가 아니라 '액세서리(accessory)'가 맞아요." },
+            { id: 78, chapter: 4, num: "78", topic: "마니아 O, 매니아 X", sentence: "내 친구는 공룡 이름을 모두 외우는 공룡 [___]예요.", answer: "마니아", options: ["마니아", "매니아"], hint: "어떤 한 가지에 아주 열중하는 사람을 뜻해요. 첫 글자가 '마'예요.", exp: "'매니아'가 아니라 '마니아(mania)'가 올바른 외래어 표기예요." },
+            { id: 79, chapter: 4, num: "79", topic: "디지털 O, 디지탈 X", sentence: "도서관에서 컴퓨터로 책을 찾는 [___] 기기 사용법을 배웠어요.", answer: "디지털", options: ["디지털", "디지탈"], hint: "마지막 글자가 '털'이에요.", exp: "'디지탈'이 아니라 '디지털(digital)'이 올바른 외래어 표기예요." },
+            { id: 80, chapter: 4, num: "80", topic: "리더십 O, 리더쉽 X", sentence: "우리 반 반장은 친구들의 의견을 잘 모으는 멋진 [___]이 있어요.", answer: "리더십", options: ["리더십", "리더쉽"], hint: "무리를 이끄는 지도력이에요. '십'으로 끝나요.", exp: "'리더쉽'이 아니라 '리더십(leadership)'이 올바른 외래어 표기예요." },
+
+            // ================= 제5장: 꼭 알아야 할 띄어쓰기 (81 ~ 100) =================
+            { id: 81, chapter: 5, num: "81", topic: "띄어 쓰는 명", sentence: "오늘 축구 경기에 참가할 학생은 모두 [___]입니다.", answer: "열 명", options: ["열 명", "열명"], hint: "사람의 수를 세는 단위(단위성 의존명사)는 앞말과 띄어 써요.", exp: "'명'은 사람을 세는 단위 명사이므로 한글 숫자 뒤에 항상 '열 명', '세 명'처럼 띄어 써요." },
+            { id: 82, chapter: 5, num: "82", topic: "띄어 쓰는 개", sentence: "할머니께서 맛있는 사과를 [___] 주셨어요.", answer: "다섯 개", options: ["다섯 개", "다섯개"], hint: "물건의 개수를 세는 단위인 '개'는 앞말과 띄어 써요.", exp: "물건을 세는 단위인 '개'는 앞의 숫자와 띄어서 '다섯 개'로 써요." },
+            { id: 83, chapter: 5, num: "83", topic: "띄어 쓰는 겸", sentence: "공원에서 산책도 [___] 강아지와 함께 밖으로 나왔어요.", answer: "할 겸", options: ["할 겸", "할겸"], hint: "두 가지 이상의 일을 아울러 나타낼 때 쓰는 '겸'은 앞말과 띄어 써요.", exp: "의존명사 '겸'은 앞말과 항상 띄어서 '할 겸', '아침 겸 점심'처럼 써요." },
+            { id: 84, chapter: 5, num: "84", topic: "띄어 쓰는 동안", sentence: "겨울 방학 [___] 할머니 댁에서 즐거운 시간을 보냈어요.", answer: "방학 동안", options: ["방학 동안", "방학동안"], hint: "시간의 길이를 나타내는 '동안'은 앞말과 띄어 써요.", exp: "'동안'은 독립된 명사이므로 '방학 동안', '기다리는 동안'처럼 앞말과 띄어 써요. (단, '오랫동안'만 한 단어라 붙여 써요)" },
+            { id: 85, chapter: 5, num: "85", topic: "띄어 쓰는 뻔하다", sentence: "아침에 늦잠을 자서 하마터면 학교에 [___].", answer: "지각할 뻔했다", options: ["지각할 뻔했다", "지각할뻔했다"], hint: "어떤 일이 거의 일어날 것 같았다는 뜻의 '뻔하다'는 앞말과 띄어 써요.", exp: "'-(으)ㄹ 뻔하다' 구성에서는 앞말과 띄어서 '지각할 뻔했다', '넘어질 뻔했다'로 써요." },
+            { id: 86, chapter: 5, num: "86", topic: "띄어 쓰는 거다", sentence: "이 그림은 내가 동생을 위해 직접 [___].", answer: "그린 거다", options: ["그린 거다", "그린거다"], hint: "'거다'는 '것이다'가 줄어든 말이에요. 의존명사 '것(거)'은 앞말과 띄어 써요.", exp: "'그린 것이다'의 줄임말이므로 앞의 꾸며 주는 말과 띄어서 '그린 거다'라고 써요." },
+            { id: 87, chapter: 5, num: "87", topic: "붙여 쓰는 대로", sentence: "선생님의 말씀[___] 차근차근 따라 하니 문제를 쉽게 풀었어요.", answer: "말씀대로", options: ["말씀대로", "말씀 대로"], hint: "'말씀', '법', '약속' 같은 명사 바로 뒤에 붙는 '대로'는 조사여서 붙여 써요.", exp: "체언(명사) 뒤에 붙는 '대로'는 조사이므로 '말씀대로', '약속대로'처럼 앞말에 붙여 써요." },
+            { id: 88, chapter: 5, num: "88", topic: "띄어 쓰는 대로", sentence: "선생님이 칠판에 [___] 공책에 똑같이 따라 적었어요.", answer: "쓰는 대로", options: ["쓰는 대로", "쓰는대로"], hint: "'쓰는', '보는', '아는'처럼 동작을 나타내는 말 뒤에 오는 '대로'는 띄어 써요.", exp: "동사나 형용사(관형사형) 뒤에 오는 '대로'는 의존명사이므로 '쓰는 대로', '보는 대로'처럼 띄어 써요." },
+            { id: 89, chapter: 5, num: "89", topic: "붙여 쓰는 같이", sentence: "우리 반 친구들은 매일 [___] 모여서 즐겁게 축구를 해요.", answer: "가족같이", options: ["가족같이", "가족 같이"], hint: "명사('가족', '얼음', '친구') 뒤에 붙어 '~처럼'의 뜻을 나타낼 때는 붙여 써요.", exp: "명사 뒤에 붙어 '~처럼'을 뜻하는 '같이'는 조사이므로 '가족같이', '얼음같이'처럼 붙여 써요." },
+            { id: 90, chapter: 5, num: "90", topic: "띄어 쓰는 같이", sentence: "이번 주말에는 온 가족이 [___] 도서관에 가기로 했어요.", answer: "다 같이", options: ["다 같이", "다같이"], hint: "'함께'라는 뜻의 부사 '같이'는 앞의 '다'와 띄어 써요.", exp: "'다 함께'라는 뜻일 때는 각기 다른 부사이므로 '다 같이'로 띄어 써요." },
+            { id: 91, chapter: 5, num: "91", topic: "띄어 쓰는 데", sentence: "이 무거운 상자를 혼자 [___] 힘이 많이 들었어요.", answer: "옮기는 데", options: ["옮기는 데", "옮기는데"], hint: "'옮기는 일(경우/장소)'이라는 뜻일 때는 의존명사 '데'이므로 띄어 써요.", exp: "'장소, 일, 경우'를 뜻하는 의존명사 '데'는 앞말과 띄어서 '옮기는 데', '공부하는 데'처럼 써요." },
+            { id: 92, chapter: 5, num: "92", topic: "띄어 쓰는 등", sentence: "과일 가게에는 사과, 배, 포도 [___] 맛있는 과일이 많아요.", answer: "포도 등", options: ["포도 등", "포도등"], hint: "여러 가지를 나열한 뒤 '그 밖에도 더 있음'을 나타내는 '등'은 띄어 써요.", exp: "의존명사 '등(等)'은 앞말과 항상 띄어서 '포도 등'이라고 써요." },
+            { id: 93, chapter: 5, num: "93", topic: "띄어 쓰는 지", sentence: "한국에 와서 한국어를 공부하기 [___] 벌써 1년이 지났어요.", answer: "시작한 지", options: ["시작한 지", "시작한지"], hint: "어떤 일이 있었던 때로부터 지금까지의 '시간'을 나타낼 때 '지'는 띄어 써요.", exp: "시간의 경과를 나타내는 의존명사 '지'는 앞말과 띄어서 '시작한 지', '만난 지'처럼 써요." },
+            { id: 94, chapter: 5, num: "94", topic: "띄어 쓰는 중", sentence: "지금은 수업 시간이라 열심히 [___]입니다.", answer: "공부하는 중", options: ["공부하는 중", "공부하는중"], hint: "무엇을 하고 있는 도중임을 나타내는 '중'은 앞말과 띄어 써요.", exp: "'하고 있는 도중'을 뜻하는 의존명사 '중'은 앞말과 띄어서 '공부하는 중'으로 써요." },
+            { id: 95, chapter: 5, num: "95", topic: "붙여 쓰는 만큼", sentence: "동생도 이제 [___] 어른스럽게 행동을 잘해요.", answer: "형만큼", options: ["형만큼", "형 만큼"], hint: "'형', '나', '하늘' 같은 명사 바로 뒤에 붙는 '만큼'은 조사여서 붙여 써요.", exp: "명사나 대명사 뒤에 붙는 '만큼'은 조사이므로 '형만큼', '나만큼'처럼 앞말에 붙여 써요." },
+            { id: 96, chapter: 5, num: "96", topic: "띄어 쓰는 만큼", sentence: "열심히 [___] 좋은 결과가 있을 거라고 믿어요.", answer: "노력한 만큼", options: ["노력한 만큼", "노력한만큼"], hint: "'노력한', '먹은'처럼 움직임을 꾸며 주는 말 뒤에 오는 '만큼'은 띄어 써요.", exp: "동사·형용사 뒤에 오는 '만큼'은 의존명사이므로 '노력한 만큼', '연습한 만큼'처럼 띄어 써요." },
+            { id: 97, chapter: 5, num: "97", topic: "붙여 쓰는 밖에", sentence: "지갑을 열어 보니 동전이 딱 [___] 남지 않았어요.", answer: "천 원밖에", options: ["천 원밖에", "천 원 밖에"], hint: "뒤에 '없다/남지 않다'가 오면서 '그것 말고는 없다'는 뜻일 때는 붙여 써요.", exp: "'그것 말고는 없음'을 나타내는 조사 '밖에'는 앞말에 붙여서 '천 원밖에', '하나밖에'로 써요." },
+            { id: 98, chapter: 5, num: "98", topic: "띄어 쓰는 밖에", sentence: "교실 안이 더워서 쉬는 시간에 [___] 나가 바람을 쐬었어요.", answer: "교실 밖에", options: ["교실 밖에", "교실밖에"], hint: "'안(내부)'의 반대말인 바깥 장소를 뜻할 때는 명사이므로 띄어 써요.", exp: "바깥 공간을 뜻하는 명사 '밖'은 앞말과 띄어서 '교실 밖에', '창문 밖에'로 써요." },
+            { id: 99, chapter: 5, num: "99", topic: "붙여 쓰는 뿐", sentence: "내가 믿을 사람은 오직 내 단짝 [___]이다.", answer: "친구뿐", options: ["친구뿐", "친구 뿐"], hint: "'친구', '너', '물' 같은 명사 바로 뒤에 붙는 '뿐'은 조사여서 붙여 써요.", exp: "명사 바로 뒤에 붙어 '오직 그것만'을 뜻하는 '뿐'은 조사이므로 '친구뿐', '너뿐'처럼 붙여 써요." },
+            { id: 100, chapter: 5, num: "100", topic: "띄어 쓰는 뿐", sentence: "나는 친구의 이야기를 조용히 [___]이었다.", answer: "들을 뿐", options: ["들을 뿐", "들을뿐"], hint: "'들을', '웃을', '바랄'처럼 동작을 나타내는 말 뒤에 오는 '뿐'은 띄어 써요.", exp: "용언의 관형사형('-(으)ㄹ') 뒤에 오는 '뿐'은 의존명사이므로 '들을 뿐', '웃을 뿐'처럼 띄어 써요." }
+        ];
+
+        /**
+         * 제1장(01~20) 및 제2장(21~40)에 등장하는 모든 짝꿍 단어들을 하나도 빠짐없이 학습하고
+         * 퀴즈로도 풀어볼 수 있도록 보충한 상세 단어 사전 및 추가 퀴즈 문항 데이터입니다.
+         * (예: 01번에서 '모래'뿐만 아니라 '모레'도 직접 정답으로 골라보는 문항 포함)
+         */
+        const EXTRA_PAIR_QUESTIONS = [
+            // 제1장 반대 짝꿍 단어 문제 (01 ~ 20 모든 어휘 완비)
+            { id: 101, chapter: 1, num: "01", topic: "모래, 모레", sentence: "내일은 화요일이고, 내일의 다음 날인 [___]는 수요일이에요.", answer: "모레", options: ["모래", "모레"], hint: "오늘 -> 내일 -> 그다음 날을 가리키는 말이에요.", exp: "'모레'는 내일의 다음 날이고, '모래'는 바닷가에 있는 작은 돌알갱이예요." },
+            { id: 102, chapter: 1, num: "02", topic: "덥다, 덮다", sentence: "한여름에는 햇볕이 쨍쨍 내리쬐어서 날씨가 무척 [___].", answer: "덥다", options: ["덥다", "덮다"], hint: "기온이 높아서 몸에 땀이 나는 상태예요.", exp: "날씨가 뜨거운 것은 '덥다', 이불이나 뚜껑을 씌우는 것은 '덮다'예요." },
+            { id: 103, chapter: 1, num: "03", topic: "이따가, 있다가", sentence: "비가 그칠 때까지 교실 안에 잠깐 [___] 집에 가자.", answer: "있다가", options: ["이따가", "있다가"], hint: "어떤 장소에 머물러 있다가 움직인다는 뜻이에요.", exp: "장소에 머무는 것은 '있다가', 조금 시간이 지난 뒤는 '이따가'예요." },
+            { id: 104, chapter: 1, num: "04", topic: "맞다, 맡다", sentence: "내가 푼 수학 문제의 답이 정답과 똑같이 [___].", answer: "맞았다", options: ["맞았다", "맡았다"], hint: "틀리지 않고 옳다는 뜻이에요.", exp: "답이 틀리지 않을 때는 '맞다(맞았다)', 냄새를 느끼거나 역할을 책임질 때는 '맡다(맡았다)'를 써요." },
+            { id: 105, chapter: 1, num: "05", topic: "때, 떼", sentence: "가을 하늘에 잠자리 [___]가 무리를 지어 날아가요.", answer: "떼", options: ["때", "떼"], hint: "여럿이 한데 모인 무리나 집단을 뜻해요.", exp: "여럿이 모인 무리나 억지를 부리는 것은 '떼', 시간이나 몸의 먼지는 '때'예요." },
+            { id: 106, chapter: 1, num: "06", topic: "매다, 메다", sentence: "달리기를 하기 전에 운동화 끈을 단단히 묶어 [___].", answer: "맸다", options: ["맸다", "멨다"], hint: "끈이나 줄을 풀리지 않게 묶는 행동이에요.", exp: "신발 끈이나 안전벨트를 묶을 때는 '매다(맸다)', 어깨에 가방을 걸칠 때는 '메다(멨다)'를 써요." },
+            { id: 107, chapter: 1, num: "07", topic: "낫다, 낮다", sentence: "유치원 동생들이 앉는 의자는 높이가 아주 [___].", answer: "낮다", options: ["낫다", "낮다"], hint: "'높다'의 반대말이에요.", exp: "높이가 아래에 있을 때는 '낮다', 병이 고쳐지거나 더 좋을 때는 '낫다'를 써요." },
+            { id: 108, chapter: 1, num: "08", topic: "업다, 없다", sentence: "필통을 열어 보니 지우개가 하나도 [___].", answer: "없다", options: ["업다", "없다"], hint: "'있다'의 반대말로 아무것도 존재하지 않는 상태예요.", exp: "존재하지 않는 것은 '없다', 동생을 등에 태우는 것은 '업다'예요." },
+            { id: 109, chapter: 1, num: "09", topic: "부치다, 붙이다", sentence: "도화지에 풀을 발라 색종이를 예쁘게 [___].", answer: "붙였다", options: ["부쳤다", "붙였다"], hint: "풀이나 테이프로 떨어지지 않게 고정하는 행동이에요.", exp: "풀로 고정할 때는 '붙이다(붙였다)', 편지를 보내거나 부침개를 요리할 때는 '부치다(부쳤다)'를 써요." },
+            { id: 110, chapter: 1, num: "10", topic: "시키다, 식히다", sentence: "중국집에 전화해서 맛있는 자장면을 배달 [___].", answer: "시켰다", options: ["시켰다", "식혔다"], hint: "음식을 주문하거나 어떤 일을 하게 만든다는 뜻이에요.", exp: "주문하거나 일을 하게 할 때는 '시키다(시켰다)', 뜨거운 것을 차게 할 때는 '식히다(식혔다)'를 써요." },
+            { id: 111, chapter: 1, num: "11", topic: "빗, 빚, 빛", sentence: "밤하늘에 반짝이는 밝은 별[___]이 참 아름다워요.", answer: "빛", options: ["빗", "빚", "빛"], hint: "어두운 곳을 환하게 밝혀 주는 것이에요.", exp: "밝게 비추는 것은 '빛', 머리 손질 도구는 '빗', 빌려서 갚아야 할 돈은 '빚'이에요." },
+            { id: 112, chapter: 1, num: "11", topic: "빗, 빚, 빛", sentence: "은행이나 친구에게 빌린 돈인 [___]은 약속한 날짜에 꼭 갚아야 해요.", answer: "빚", options: ["빗", "빚", "빛"], hint: "남에게 빌려서 갚아야 하는 돈을 뜻해요.", exp: "갚아야 할 돈은 '빚', 머리 빗는 도구는 '빗', 환한 것은 '빛'이에요." },
+            { id: 113, chapter: 1, num: "12", topic: "다치다, 닫히다", sentence: "자전거를 타다가 넘어져서 무릎을 [___].", answer: "다쳤다", options: ["다쳤다", "닫혔다"], hint: "몸에 상처가 나서 아프게 되었다는 뜻이에요.", exp: "몸에 상처가 날 때는 '다치다(다쳤다)', 문이 닫아질 때는 '닫히다(닫혔다)'를 써요." },
+            { id: 114, chapter: 1, num: "13", topic: "낫, 낮, 낯", sentence: "농부 아저씨께서 날카로운 [___]으로 논둑의 풀을 베셨어요.", answer: "낫", options: ["낫", "낮", "낯"], hint: "기역(ㄱ)자 모양으로 생긴 풀이나 곡식을 베는 농기구예요.", exp: "풀을 베는 도구는 '낫', 해가 떠 있는 시간은 '낮', 사람의 얼굴은 '낯'이에요." },
+            { id: 115, chapter: 1, num: "13", topic: "낫, 낮, 낯", sentence: "해가 떠 있는 밝은 [___]에는 밖에서 뛰어놀고 밤에는 잠을 자요.", answer: "낮", options: ["낫", "낮", "낯"], hint: "'밤'의 반대말로 해가 떠 있는 동안이에요.", exp: "밤의 반대말은 '낮', 풀 베는 도구는 '낫', 얼굴은 '낯'이에요." },
+            { id: 116, chapter: 1, num: "14", topic: "짓다, 짖다", sentence: "제비가 처마 밑에 나뭇가지와 진흙으로 튼튼한 집을 [___].", answer: "지었다", options: ["지었다", "짖었다"], hint: "집이나 밥, 옷, 노래 등을 새로 만든다는 뜻이에요.", exp: "집이나 밥을 만들 때는 '짓다(지었다)', 강아지가 소리를 낼 때는 '짖다(짖었다)'를 써요." },
+            { id: 117, chapter: 1, num: "15", topic: "반드시, 반듯이", sentence: "의자에 앉을 때는 허리를 구부리지 말고 [___] 펴고 앉으세요.", answer: "반듯이", options: ["반드시", "반듯이"], hint: "모양이나 자세가 휘거나 삐뚤어지지 않고 바르게라는 뜻이에요.", exp: "모양이나 자세가 바른 것은 '반듯이', 약속을 꼭 지킨다처럼 '틀림없이'는 '반드시'예요." },
+            { id: 118, chapter: 1, num: "16", topic: "젓다, 젖다", sentence: "냄비 바닥이 타지 않게 국자로 카레를 골고루 [___].", answer: "저었다", options: ["저었다", "젖었다"], hint: "액체가 든 냄비나 컵 속을 숟가락이나 국자로 돌리며 섞는 행동이에요.", exp: "국물을 섞거나 손을 흔들 때는 '젓다(저었다)', 물이 스며들어 축축해질 때는 '젖다(젖었다)'를 써요." },
+            { id: 119, chapter: 1, num: "17", topic: "갖다, 같다", sentence: "나도 어른이 되면 멋진 요리사라는 직업을 [___] 싶어요.", answer: "갖고", options: ["갖고", "같고"], hint: "'가지다'가 줄어든 말로, 자기 것으로 만들다라는 뜻이에요.", exp: "'가지다(가지고)'의 줄임말은 '갖다(갖고)'이며, 서로 비슷할 때는 '같다(같고)'를 써요." },
+            { id: 120, chapter: 1, num: "18", topic: "새다, 세다", sentence: "지붕에 작은 구멍이 났는지 비가 오자 천장에서 빗물이 [___].", answer: "새었다", options: ["새었다", "세었다"], hint: "물이나 공기, 빛이 틈을 통해 밖으로 빠져나온다는 뜻이에요.", exp: "물이나 빛이 틈으로 빠져나올 때는 '새다(새었다)', 숫자를 헤아릴 때는 '세다(세었다)'를 써요." },
+            { id: 121, chapter: 1, num: "19", topic: "지그시, 지긋이", sentence: "할아버지께서는 연세가 [___] 드셨지만 지금도 정정하세요.", answer: "지긋이", options: ["지그시", "지긋이"], hint: "나이가 비교적 많이 들어 듬직하거나 침착한 모양이에요.", exp: "나이가 꽤 많이 들었을 때는 '지긋이', 눈을 살며시 감거나 아픔을 참을 때는 '지그시'를 써요." },
+            { id: 122, chapter: 1, num: "20", topic: "빗다, 빚다", sentence: "샤워를 하고 나서 엉킨 머리카락을 빗으로 단정하게 [___].", answer: "빗었다", options: ["빗었다", "빚었다"], hint: "빗으로 머리카락을 가지런히 정리하는 행동이에요.", exp: "머리카락을 정리할 때는 '빗다(빗었다)', 송편이나 만두를 만들 때는 '빚다(빚었다)'를 써요." },
+
+            // 제2장 반대 짝꿍 단어 문제 (21 ~ 40 모든 어휘 완비)
+            { id: 123, chapter: 2, num: "21", topic: "안, 못", sentence: "숙제를 할 수는 있지만 지금은 놀고 싶어서 아직 [___] 했어요.", answer: "안", options: ["안", "못"], hint: "할 수 있는 능력이 있지만 내 마음으로 하지 않는다는 뜻이에요.", exp: "스스로의 생각으로 하지 않을 때는 '안', 실력이나 사정 때문에 할 수 없을 때는 '못'을 써요." },
+            { id: 124, chapter: 2, num: "22", topic: "작다, 적다", sentence: "오늘은 비가 와서 공원에 놀러 나온 사람들의 수가 [___].", answer: "적다", options: ["작다", "적다"], hint: "'많다'의 반대말로, 수량이나 정도가 많지 않다는 뜻이에요.", exp: "수나 양이 많지 않을 때는 '적다', 크기나 키가 크지 않을 때는 '작다'를 써요." },
+            { id: 125, chapter: 2, num: "23", topic: "빨리, 일찍", sentence: "치타는 초원에서 그 어떤 동물보다도 가장 [___] 달릴 수 있어요.", answer: "빨리", options: ["빨리", "일찍"], hint: "움직이는 속도가 매우 빠르다는 뜻이에요.", exp: "속도가 빠를 때는 '빨리', 정해진 시간보다 이른 시각을 나타낼 때는 '일찍'을 써요." },
+            { id: 126, chapter: 2, num: "24", topic: "느리다, 늦다", sentence: "버스를 놓치는 바람에 약속 시간보다 10분이나 [___].", answer: "늦었다", options: ["느렸다", "늦었다"], hint: "정해진 시간을 넘겨 제때 도착하지 못했다는 뜻이에요.", exp: "기준 시간을 넘겼을 때는 '늦다(늦었다)', 움직이는 속도가 천천히 갈 때는 '느리다(느렸다)'를 써요." },
+            { id: 127, chapter: 2, num: "25", topic: "가르치다, 가리키다", sentence: "동생에게 한글을 읽고 쓰는 방법을 친절하게 [___] 주었어요.", answer: "가르쳐", options: ["가르쳐", "가리켜"], hint: "모르는 지식이나 기술을 설명하여 알게 해 준다는 뜻이에요.", exp: "지식이나 방법을 알려 줄 때는 '가르치다(가르쳐)', 손가락으로 방향을 짚을 때는 '가리키다(가리켜)'를 써요." },
+            { id: 128, chapter: 2, num: "26", topic: "다르다, 틀리다", sentence: "계산을 실수해서 3번 문제의 답이 [___].", answer: "틀렸다", options: ["달랐다", "틀렸다"], hint: "답이나 셈이 바르지 못하고 어긋났다는 뜻이에요.", exp: "정답이 아니거나 계산이 맞지 않을 때는 '틀리다(틀렸다)', 서로 같지 않고 차이가 있을 때는 '다르다(달랐다)'를 써요." },
+            { id: 129, chapter: 2, num: "27", topic: "잃다, 잊다", sentence: "지하철에 우산을 두고 내려서 아끼던 우산을 [___] 버렸어요.", answer: "잃어", options: ["잃어", "잊어"], hint: "가지고 있던 물건이 내 손에서 빠져나가 없어진 상태예요.", exp: "물건을 놓쳐 없어진 때는 '잃다(잃어)', 기억이 나지 않을 때는 '잊다(잊어)'를 써요." },
+            { id: 130, chapter: 2, num: "28", topic: "들리다, 들르다", sentence: "창문을 열었더니 밖에서 새들이 지저귀는 고운 소리가 [___].", answer: "들렸다", options: ["들렸다", "들렀다"], hint: "소리가 귀를 통해 느껴진다는 뜻이에요.", exp: "소리가 귀에 들어올 때는 '들리다(들렸다)', 어디에 잠깐 방문할 때는 '들르다(들렀다)'를 써요." },
+            { id: 131, chapter: 2, num: "29", topic: "맞추다, 맞히다", sentence: "동생과 함께 100조각짜리 그림 퍼즐을 제자리에 [___].", answer: "맞추었다", options: ["맞추었다", "맞혔다"], hint: "서로 떨어진 조각들을 알맞은 자리에 대어 연결한다는 뜻이에요.", exp: "퍼즐 조각이나 박자, 옷의 치수를 맞게 할 때는 '맞추다', 문제의 정답을 알아낼 때는 '맞히다'를 써요." },
+            { id: 132, chapter: 2, num: "30", topic: "바라다, 바래다", sentence: "오래 입은 파란색 티셔츠가 햇볕에 [___] 색깔이 연해졌어요.", answer: "바래서", options: ["바라서", "바래서"], hint: "볕이나 물에 닿아 본래의 색깔이 희미하게 변한다는 뜻이에요.", exp: "색이 변하거나 밤에 길을 배웅할 때는 '바래다', 소망을 원할 때는 '바라다'를 써요." },
+            { id: 133, chapter: 2, num: "31", topic: "-장이, -쟁이", sentence: "불로 쇠를 달구어 농기구를 만드는 기술자를 대장[___]라고 불러요.", answer: "장이", options: ["장이", "쟁이"], hint: "수공업적인 전문 기술을 가진 사람에게는 '-장이'를 붙여요.", exp: "전문 기술을 가진 사람은 '대장장이, 미장이, 옹기장이', 성격이나 습관이 많은 사람은 '개구쟁이, 멋쟁이'라고 해요." },
+            { id: 134, chapter: 2, num: "32", topic: "담다, 담그다", sentence: "과일 바구니에 사과와 바나나를 예쁘게 [___].", answer: "담았다", options: ["담았다", "담갔다"], hint: "그릇이나 가방, 바구니 속에 물건을 넣는 행동이에요.", exp: "그릇이나 바구니에 물건을 넣을 때는 '담다(담았다)', 물에 넣거나 김치를 만들 때는 '담그다(담갔다)'를 써요." },
+            { id: 135, chapter: 2, num: "33", topic: "한참, 한창", sentence: "버스가 오지 않아서 정류장에서 [___] 동안 기다렸어요.", answer: "한참", options: ["한참", "한창"], hint: "시간이 상당히 오래 걸리는 동안을 뜻해요.", exp: "시간이 오래 걸릴 때는 '한참', 어떤 일이 가장 활발하고 왕성할 때는 '한창'을 써요." },
+            { id: 136, chapter: 2, num: "34", topic: "젖히다, 제치다", sentence: "밤하늘의 별을 보려고 고개를 뒤로 [___].", answer: "젖혔다", options: ["젖혔다", "제쳤다"], hint: "고개나 상체를 뒤쪽으로 기울이는 행동이에요.", exp: "고개를 뒤로 기울이거나 커튼을 옆으로 열 때는 '젖히다(젖혔다)', 상대를 이기고 넘어설 때는 '제치다(제쳤다)'를 써요." },
+            { id: 137, chapter: 2, num: "35", topic: "골다, 곪다", sentence: "아빠께서 피곤하셨는지 주무시면서 드르렁드르렁 코를 [___].", answer: "고셨다", options: ["고셨다", "곪으셨다"], hint: "'코를 골다'에서 온 말로, 잠잘 때 코에서 소리가 나는 현상이에요.", exp: "잠잘 때 코에서 소리가 나는 것은 '코를 골다(골았다/고셨다)', 상처에 고름이 차는 것은 '곪다'예요." },
+            { id: 138, chapter: 2, num: "36", topic: "껍데기, 껍질", sentence: "바닷가 모래사장에서 예쁜 조개[___]를 주웠어요.", answer: "껍데기", options: ["껍데기", "껍질"], hint: "조개나 달걀, 게처럼 겉을 감싸고 있는 딱딱한 물질이에요.", exp: "조개나 달걀의 딱딱한 겉 부분은 '껍데기', 사과나 귤의 부드러운 겉 부분은 '껍질'이에요." },
+            { id: 139, chapter: 2, num: "37", topic: "비추다, 비치다", sentence: "맑은 호수 물 위로 파란 하늘과 구름이 거울처럼 [___].", answer: "비쳤다", options: ["비추었다", "비쳤다"], hint: "투명하거나 맑은 물체 위에 모양이나 그림자가 나타나 보인다는 뜻이에요.", exp: "모습이 저절로 비치어 보일 때는 '비치다(비쳤다)', 손전등 빛을 어디로 보내어 밝힐 때는 '비추다'를 써요." },
+            { id: 140, chapter: 2, num: "38", topic: "부수다, 부시다", sentence: "아침에 창문을 열었더니 햇살이 너무 밝아서 눈이 [___].", answer: "부셨다", options: ["부수었다", "부셨다"], hint: "빛이 너무 강해서 바로 쳐다보기가 힘들다는 뜻이에요.", exp: "빛이 강해 눈이 부시거나 그릇을 물로 헹굴 때는 '부시다(부셨다)', 물건을 깨뜨릴 때는 '부수다'를 써요." },
+            { id: 141, chapter: 2, num: "39", topic: "늘이다, 늘리다", sentence: "말랑말랑한 고무줄을 양손으로 잡고 길게 [___].", answer: "늘였다", options: ["늘였다", "늘렸다"], hint: "원래 있던 줄이나 물건의 길이를 더 길어지게 당기는 행동이에요.", exp: "길이를 길게 당길 때는 '늘이다(늘였다)', 수나 양, 실력을 많아지게 할 때는 '늘리다(늘렸다)'를 써요." },
+            { id: 142, chapter: 2, num: "40", topic: "벌이다, 벌리다", sentence: "학교 운동장에서 재미있는 알뜰 시장 장터를 [___].", answer: "벌였다", options: ["벌였다", "벌렸다"], hint: "행사나 잔치, 가게, 일을 차려 놓고 시작한다는 뜻이에요.", exp: "행사나 일을 시작할 때는 '벌이다(벌였다)', 입이나 팔의 사이를 넓힐 때는 '벌리다(벌렸다)'를 써요." }
+        ];
+
+        const FULL_QUESTION_BANK = [...QUESTION_BANK, ...EXTRA_PAIR_QUESTIONS];
+
+        /**
+         * Helper: Build a structured 100-item dictionary entry combining all word pairs
+         * so students can study EVERY single word listed in the textbook (01 ~ 100).
+         */
+        function getAll100StudyTopics() {
+            return QUESTION_BANK.map(baseItem => {
+                const relatedExtras = EXTRA_PAIR_QUESTIONS.filter(ex => ex.num === baseItem.num);
+                const allQuestionsForNum = [baseItem, ...relatedExtras];
+                return {
+                    num: baseItem.num,
+                    chapter: baseItem.chapter,
+                    topic: baseItem.topic,
+                    exp: baseItem.exp,
+                    examples: allQuestionsForNum.map(q => ({
+                        word: q.answer,
+                        wrongOptions: q.options.filter(o => o !== q.answer),
+                        sentenceHtml: q.sentence.replace('[___]', `<span class="px-2 py-0.5 rounded-lg bg-brand-100 text-brand-800 font-extrabold underline decoration-2">${q.answer}</span>`),
+                        plainSentence: q.sentence.replace('[___]', q.answer),
+                        hint: q.hint
+                    }))
+                };
+            });
+        }
+
+        const ALL_100_TOPICS = getAll100StudyTopics();
+
+        /**
+         * Sound Manager using Tone.js
+         */
+        class SoundManager {
+            constructor() {
+                this.enabled = true;
+                this.synth = null;
+            }
+            init() {
+                if (!this.synth && typeof Tone !== 'undefined') {
+                    this.synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                    this.synth.volume.value = -8;
+                }
+            }
+            playCorrect() {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    const now = Tone.now();
+                    this.synth.triggerAttackRelease("C5", "16n", now);
+                    this.synth.triggerAttackRelease("E5", "16n", now + 0.08);
+                    this.synth.triggerAttackRelease("G5", "8n", now + 0.16);
+                } catch (e) {}
+            }
+            playWrong() {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    const now = Tone.now();
+                    this.synth.triggerAttackRelease("F4", "16n", now);
+                    this.synth.triggerAttackRelease("D4", "8n", now + 0.12);
+                } catch (e) {}
+            }
+            playFanfare() {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    const now = Tone.now();
+                    this.synth.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
+                    this.synth.triggerAttackRelease(["C5", "E5", "G5"], "4n", now + 0.18);
+                } catch (e) {}
+            }
+        }
+
+        /**
+         * Main Application Controller
+         */
+        const app = {
+            currentStudent: null, // { studentId, name }
+            questionCountSetting: 10, // 5, 10, 20, or 999 (all)
+            records: [], // Array of quiz attempt logs managed for the teacher
+            studiedMap: {}, // { "studentId__studentName": Set of studied topic numbers ("01" ~ "100") }
+            teacherUnlocked: false,
+            sound: new SoundManager(),
+
+            // Study View State
+            studyState: {
+                currentChapterFilter: 'ALL', // 'ALL', 1, 2, 3, 4, 5
+                isFlashcardMode: false,
+                flashcardIndex: 0,
+                flashcardFlipped: false
+            },
+
+            // Active Quiz State
+            activeQuiz: {
+                chapterId: null,
+                questions: [],
+                currentIndex: 0,
+                correctCount: 0,
+                startTime: null,
+                userAnswers: [], // { question, selected, isCorrect }
+                answeredCurrent: false
+            },
+
+            init() {
+                // Seed initial helpful demo records so teacher dashboard has rich examples immediately if empty
+                this.seedInitialDemoRecordsIfEmpty();
+                this.updateQuestionCountUI();
+                this.showView('view-login');
+            },
+
+            seedInitialDemoRecordsIfEmpty() {
+                if (this.records.length === 0) {
+                    this.studiedMap = {
+                        '30102__응우옌민수': new Set(['01','02','03','04','05','06','07','08','09','10','41','42','43','44','45']),
+                        '30208__박소피아': new Set(['01','02','03','04','05','61','62','63','64','65','66','67','68','69','70']),
+                        '30215__알렉스김': new Set(['81','82','83','84','85','86','87','88'])
+                    };
+                    this.records = [
+                        {
+                            id: 'rec-demo-1',
+                            timestamp: '2026-11-05 09:30',
+                            studentId: '30102',
+                            studentName: '응우옌민수',
+                            chapterId: 1,
+                            chapterTitle: '제1장 발음이 비슷한 말',
+                            score: 90,
+                            correctCount: 9,
+                            totalCount: 10,
+                            durationSec: 68,
+                            wrongItems: [
+                                { num: "09", topic: "부치다, 붙이다", chosen: "붙였다", answer: "부쳤다" }
+                            ]
+                        },
+                        {
+                            id: 'rec-demo-2',
+                            timestamp: '2026-11-05 09:45',
+                            studentId: '30102',
+                            studentName: '응우옌민수',
+                            chapterId: 3,
+                            chapterTitle: '제3장 틀리기 쉬운 말',
+                            score: 80,
+                            correctCount: 8,
+                            totalCount: 10,
+                            durationSec: 74,
+                            wrongItems: [
+                                { num: "42", topic: "며칠 O, 몇일 X", chosen: "몇일", answer: "며칠" },
+                                { num: "44", topic: "깨끗이 O, 깨끗히 X", chosen: "깨끗히", answer: "깨끗이" }
+                            ]
+                        },
+                        {
+                            id: 'rec-demo-3',
+                            timestamp: '2026-11-05 10:10',
+                            studentId: '30208',
+                            studentName: '박소피아',
+                            chapterId: 4,
+                            chapterTitle: '제4장 잘못 쓰는 외래어',
+                            score: 100,
+                            correctCount: 10,
+                            totalCount: 10,
+                            durationSec: 52,
+                            wrongItems: []
+                        },
+                        {
+                            id: 'rec-demo-4',
+                            timestamp: '2026-11-05 10:25',
+                            studentId: '30215',
+                            studentName: '알렉스김',
+                            chapterId: 5,
+                            chapterTitle: '제5장 꼭 알아야 할 띄어쓰기',
+                            score: 70,
+                            correctCount: 7,
+                            totalCount: 10,
+                            durationSec: 95,
+                            wrongItems: [
+                                { num: "88", topic: "띄어 쓰는 대로", chosen: "쓰는대로", answer: "쓰는 대로" },
+                                { num: "93", topic: "띄어 쓰는 지", chosen: "시작한지", answer: "시작한 지" },
+                                { num: "96", topic: "띄어 쓰는 만큼", chosen: "노력한만큼", answer: "노력한 만큼" }
+                            ]
+                        }
+                    ];
+                }
+            },
+
+            // View Switcher
+            showView(viewId) {
+                const views = ['view-login', 'view-chapters', 'view-study', 'view-quiz', 'view-result', 'view-teacher'];
+                views.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.add('hidden');
+                });
+                const target = document.getElementById(viewId);
+                if (target) target.classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+
+            navigateHome() {
+                if (this.currentStudent) {
+                    this.showChaptersView();
+                } else {
+                    this.showView('view-login');
+                }
+            },
+
+            toggleSound() {
+                this.sound.enabled = !this.sound.enabled;
+                const icon = document.getElementById('soundIcon');
+                if (this.sound.enabled) {
+                    icon.className = 'ph-fill ph-speaker-high text-xl text-brand-600';
+                } else {
+                    icon.className = 'ph-fill ph-speaker-slash text-xl text-slate-400';
+                }
+            },
+
+            // Student Login
+            handleStudentLogin(e) {
+                e.preventDefault();
+                const idInput = document.getElementById('inputStudentId').value.trim();
+                const nameInput = document.getElementById('inputStudentName').value.trim();
+
+                if (!idInput || !nameInput) return;
+
+                this.currentStudent = {
+                    studentId: idInput,
+                    name: nameInput
+                };
+
+                // Update Top Badge
+                const badge = document.getElementById('studentBadge');
+                const info = document.getElementById('headerStudentInfo');
+                info.textContent = `${this.currentStudent.studentId} ${this.currentStudent.name}`;
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+
+                this.showChaptersView();
+            },
+
+            logoutStudent() {
+                this.currentStudent = null;
+                const badge = document.getElementById('studentBadge');
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+                document.getElementById('inputStudentId').value = '';
+                document.getElementById('inputStudentName').value = '';
+                this.showView('view-login');
+            },
+
+            setQuestionCount(count) {
+                this.questionCountSetting = count;
+                this.updateQuestionCountUI();
+            },
+
+            updateQuestionCountUI() {
+                [5, 10, 20, 999].forEach(c => {
+                    const btn = document.getElementById(`qCount-${c}`);
+                    if (!btn) return;
+                    if (this.questionCountSetting === c) {
+                        btn.className = 'q-count-btn px-3.5 py-1.5 rounded-xl text-sm font-bold border-2 border-brand-600 bg-brand-50 text-brand-700 transition-all';
+                    } else {
+                        btn.className = 'q-count-btn px-3.5 py-1.5 rounded-xl text-sm font-bold border-2 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all';
+                    }
+                });
+            },
+
+            getStudentStudySet() {
+                if (!this.currentStudent) return new Set();
+                const key = `${this.currentStudent.studentId}__${this.currentStudent.name}`;
+                if (!this.studiedMap[key]) {
+                    this.studiedMap[key] = new Set();
+                }
+                return this.studiedMap[key];
+            },
+
+            toggleStudiedTopic(numStr) {
+                const set = this.getStudentStudySet();
+                if (set.has(numStr)) {
+                    set.delete(numStr);
+                } else {
+                    set.add(numStr);
+                    this.sound.playCorrect();
+                }
+                this.renderStudyItems();
+            },
+
+            markAllVisibleTopicsStudied() {
+                const set = this.getStudentStudySet();
+                const filtered = this.getFilteredStudyTopics();
+                filtered.forEach(t => set.add(t.num));
+                this.sound.playFanfare();
+                this.renderStudyItems();
+            },
+
+            // Render Chapters Selection Screen
+            showChaptersView() {
+                if (!this.currentStudent) {
+                    this.showView('view-login');
+                    return;
+                }
+
+                document.getElementById('welcomeStudentName').textContent = this.currentStudent.name;
+
+                // Calculate current student's personal stats
+                const myLogs = this.records.filter(r =>
+                    r.studentId === this.currentStudent.studentId &&
+                    r.studentName === this.currentStudent.name
+                );
+
+                document.getElementById('myTotalCompleted').textContent = `${myLogs.length}회`;
+                const avg = myLogs.length > 0
+                    ? Math.round(myLogs.reduce((acc, r) => acc + r.score, 0) / myLogs.length)
+                    : 0;
+                document.getElementById('myAvgScore').textContent = `${avg}점`;
+
+                const studiedSet = this.getStudentStudySet();
+
+                // Render Chapter Cards
+                const grid = document.getElementById('chapterCardsGrid');
+                grid.innerHTML = CHAPTER_META.map(ch => {
+                    const chLogs = myLogs.filter(r => String(r.chapterId) === String(ch.id));
+                    const bestScore = chLogs.length > 0 ? Math.max(...chLogs.map(r => r.score)) : null;
+
+                    const chTopics = ch.id === 'ALL_MIX' ? ALL_100_TOPICS : ALL_100_TOPICS.filter(t => t.chapter === ch.id);
+                    const chQuizCount = ch.id === 'ALL_MIX' ? FULL_QUESTION_BANK.length : FULL_QUESTION_BANK.filter(q => q.chapter === ch.id).length;
+                    const studiedCountInCh = chTopics.filter(t => studiedSet.has(t.num)).length;
+
+                    return `
+                        <div class="bg-white rounded-3xl border-2 border-slate-200/90 ${ch.cardBorder} p-6 shadow-sm card-bounce flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-3">
+                                    <span class="px-3 py-1 rounded-xl text-xs font-bold ${ch.badgeBg}">
+                                        ${chTopics.length}개 항목 • 퀴즈 ${chQuizCount}문항
+                                    </span>
+                                    ${bestScore !== null ? `
+                                        <span class="inline-flex items-center gap-1 text-xs font-bold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-lg border border-brand-200">
+                                            <i class="ph-fill ph-medal text-amber-500"></i> 최고 ${bestScore}점
+                                        </span>
+                                    ` : `
+                                        <span class="text-xs text-slate-400 font-medium">미응시</span>
+                                    `}
+                                </div>
+                                <h3 class="font-display text-xl text-slate-800 mb-1">${ch.title}</h3>
+                                <p class="text-xs font-bold text-slate-400 mb-2">${ch.subtitle}</p>
+                                <p class="text-sm text-slate-600 leading-relaxed mb-3">${ch.desc}</p>
+                                <div class="mb-4 bg-slate-50 rounded-xl px-3 py-2 border border-slate-100 flex items-center justify-between text-xs">
+                                    <span class="text-slate-500 font-medium">단어장 학습 완료</span>
+                                    <span class="font-bold text-brand-700">${studiedCountInCh} / ${chTopics.length}개</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 pt-3 border-t border-slate-100">
+                                <button onclick="app.openStudyView('${ch.id === 'ALL_MIX' ? 'ALL' : ch.id}')" class="flex-1 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors">
+                                    <i class="ph-bold ph-book-open"></i>
+                                    <span>모든 단어 학습</span>
+                                </button>
+                                <button onclick="app.startQuiz('${ch.id}')" class="flex-1 py-2.5 px-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 shadow-sm transition-colors">
+                                    <i class="ph-bold ph-play"></i>
+                                    <span>퀴즈 풀기</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Render My Recent History
+                const recentContainer = document.getElementById('myRecentHistoryList');
+                if (myLogs.length === 0) {
+                    recentContainer.innerHTML = `
+                        <div class="text-center py-6 text-slate-400 text-sm">
+                            아직 풀이한 퀴즈 기록이 없어요. 위에서 단원을 골라 첫 퀴즈를 시작해 보세요!
+                        </div>
+                    `;
+                } else {
+                    recentContainer.innerHTML = myLogs.slice().reverse().slice(0, 5).map(log => `
+                        <div class="flex flex-wrap items-center justify-between gap-2 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70">
+                            <div class="flex items-center gap-3">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${log.score >= 80 ? 'bg-brand-100 text-brand-800' : 'bg-amber-100 text-amber-800'}">
+                                    ${log.score}점
+                                </span>
+                                <div>
+                                    <div class="font-bold text-slate-800 text-sm">${log.chapterTitle}</div>
+                                    <div class="text-xs text-slate-400">${log.timestamp} • ${log.totalCount}문항 중 ${log.correctCount}개 정답</div>
+                                </div>
+                            </div>
+                            <div class="text-xs font-medium text-slate-500">
+                                ${log.wrongItems.length === 0
+                                    ? '<span class="text-brand-600 font-bold">전부 맞혔어요! 🎉</span>'
+                                    : `오답: ${log.wrongItems.map(w => w.topic).join(', ')}`}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                this.showView('view-chapters');
+            },
+
+            // Open Word Study View for a specific chapter (1~5 or 'ALL')
+            openStudyView(chapterId = 'ALL') {
+                this.studyState.currentChapterFilter = chapterId;
+                this.studyState.isFlashcardMode = false;
+                this.studyState.flashcardIndex = 0;
+                this.studyState.flashcardFlipped = false;
+
+                const searchInput = document.getElementById('studySearchInput');
+                if (searchInput) searchInput.value = '';
+
+                this.renderStudyItems();
+                this.showView('view-study');
+            },
+
+            setStudyChapterFilter(chapterId) {
+                this.studyState.currentChapterFilter = chapterId;
+                this.studyState.flashcardIndex = 0;
+                this.studyState.flashcardFlipped = false;
+                this.renderStudyItems();
+            },
+
+            toggleStudyMode() {
+                this.studyState.isFlashcardMode = !this.studyState.isFlashcardMode;
+                this.studyState.flashcardIndex = 0;
+                this.studyState.flashcardFlipped = false;
+                this.renderStudyItems();
+            },
+
+            getFilteredStudyTopics() {
+                const chFilter = this.studyState.currentChapterFilter;
+                const keyword = (document.getElementById('studySearchInput')?.value || '').trim().toLowerCase();
+
+                return ALL_100_TOPICS.filter(item => {
+                    const matchCh = chFilter === 'ALL' || String(item.chapter) === String(chFilter);
+                    if (!matchCh) return false;
+                    if (!keyword) return true;
+                    const inTopic = item.topic.toLowerCase().includes(keyword) || item.num.includes(keyword);
+                    const inExp = item.exp.toLowerCase().includes(keyword);
+                    const inExamples = item.examples.some(ex => ex.plainSentence.toLowerCase().includes(keyword));
+                    return inTopic || inExp || inExamples;
+                });
+            },
+
+            renderStudyItems() {
+                const chFilter = this.studyState.currentChapterFilter;
+                const meta = chFilter === 'ALL'
+                    ? { title: "교재 전체 01번 ~ 100번 모든 단어 학습관", subtitle: "제1장 ~ 제5장 완벽 수록", desc: "첨부된 교재 목차에 있는 100개 항목의 모든 짝꿍 단어와 올바른 표기를 빠짐없이 공부할 수 있어요." }
+                    : CHAPTER_META.find(c => String(c.id) === String(chFilter));
+
+                document.getElementById('studyChapterTitle').textContent = meta ? meta.title : "단어 학습관";
+                document.getElementById('studyChapterDesc').textContent = meta ? `${meta.subtitle} • ${meta.desc}` : "";
+
+                // Start Quiz button action from study view (launches ALL questions of this chapter)
+                const startBtn = document.getElementById('startQuizFromStudyBtn');
+                startBtn.onclick = () => {
+                    this.setQuestionCount(999);
+                    this.startQuiz(chFilter === 'ALL' ? 'ALL_MIX' : chFilter);
+                };
+
+                // Update Mode Toggle Text
+                const toggleText = document.getElementById('studyModeToggleText');
+                toggleText.textContent = this.studyState.isFlashcardMode ? "전체 목록으로 보기" : "플래시카드 모드로 보기";
+
+                // Render Chapter Tabs
+                const tabsContainer = document.getElementById('studyChapterTabs');
+                const tabOptions = [
+                    { id: 'ALL', label: '전체 (01~100번)' },
+                    { id: 1, label: '제1장 (01~20)' },
+                    { id: 2, label: '제2장 (21~40)' },
+                    { id: 3, label: '제3장 (41~60)' },
+                    { id: 4, label: '제4장 (61~80)' },
+                    { id: 5, label: '제5장 (81~100)' }
+                ];
+                tabsContainer.innerHTML = tabOptions.map(t => {
+                    const active = String(chFilter) === String(t.id);
+                    return `
+                        <button onclick="app.setStudyChapterFilter('${t.id}')"
+                            class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${active ? 'bg-brand-600 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}">
+                            ${t.label}
+                        </button>
+                    `;
+                }).join('');
+
+                // Update Progress Bar
+                const studiedSet = this.getStudentStudySet();
+                const scopeTopics = chFilter === 'ALL' ? ALL_100_TOPICS : ALL_100_TOPICS.filter(t => String(t.chapter) === String(chFilter));
+                const doneCount = scopeTopics.filter(t => studiedSet.has(t.num)).length;
+                const pct = scopeTopics.length > 0 ? Math.round((doneCount / scopeTopics.length) * 100) : 0;
+
+                document.getElementById('studyProgressCountText').textContent = `${doneCount} / ${scopeTopics.length}`;
+                document.getElementById('studyProgressBar').style.width = `${pct}%`;
+
+                const filteredTopics = this.getFilteredStudyTopics();
+                const listContainer = document.getElementById('studyItemsContainer');
+                const flashContainer = document.getElementById('studyFlashcardContainer');
+
+                if (this.studyState.isFlashcardMode) {
+                    listContainer.classList.add('hidden');
+                    flashContainer.classList.remove('hidden');
+                    this.renderFlashcardView(filteredTopics, studiedSet);
+                    return;
+                }
+
+                flashContainer.classList.add('hidden');
+                listContainer.classList.remove('hidden');
+
+                if (filteredTopics.length === 0) {
+                    listContainer.innerHTML = `
+                        <div class="col-span-full bg-white rounded-3xl p-10 text-center text-slate-400 border border-slate-200">
+                            검색어와 일치하는 단어가 없습니다.
+                        </div>
+                    `;
+                    return;
+                }
+
+                listContainer.innerHTML = filteredTopics.map(item => {
+                    const isStudied = studiedSet.has(item.num);
+                    const examplesHtml = item.examples.map(ex => `
+                        <div class="bg-slate-50/90 rounded-xl p-3 border border-slate-200/70">
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="px-2 py-0.5 rounded-md bg-brand-600 text-white text-xs font-bold">올바른 표현: ${ex.word}</span>
+                                    ${item.chapter === 3 || item.chapter === 4 || item.chapter === 5 ? `
+                                        <span class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 text-xs font-semibold line-through">틀린 표현: ${ex.wrongOptions.join(', ')}</span>
+                                    ` : ''}
+                                </div>
+                                <button onclick="app.speakText('${ex.plainSentence.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-brand-600 bg-white px-2 py-1 rounded-lg border border-slate-200 shrink-0" title="문장 발음 듣기">
+                                    <i class="ph-fill ph-speaker-high text-brand-600"></i> 듣기
+                                </button>
+                            </div>
+                            <p class="text-sm sm:text-base font-bold text-slate-800 mt-1">${ex.sentenceHtml}</p>
+                            <p class="text-xs text-slate-500 mt-1">• 뜻풀이: ${ex.hint}</p>
+                        </div>
+                    `).join('');
+
+                    return `
+                        <div class="bg-white rounded-3xl border-2 ${isStudied ? 'border-brand-400 bg-brand-50/10' : 'border-slate-200'} p-5 shadow-xs flex flex-col justify-between gap-3 transition-all">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2.5 py-1 rounded-xl bg-slate-800 text-white text-xs font-bold">
+                                            제${item.chapter}장 • ${item.num}번
+                                        </span>
+                                        <h4 class="font-display text-lg sm:text-xl text-slate-800">${item.topic}</h4>
+                                    </div>
+                                    <button onclick="app.toggleStudiedTopic('${item.num}')"
+                                        class="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all ${isStudied ? 'bg-brand-600 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}">
+                                        <i class="ph-bold ${isStudied ? 'ph-check-circle' : 'ph-circle'}"></i>
+                                        <span>${isStudied ? '학습 완료됨' : '학습 체크'}</span>
+                                    </button>
+                                </div>
+
+                                <!-- All paired words & examples for this item -->
+                                <div class="space-y-2.5 mb-3">
+                                    ${examplesHtml}
+                                </div>
+                            </div>
+
+                            <div class="bg-amber-50/80 rounded-2xl p-3.5 text-xs sm:text-sm text-amber-950 border border-amber-200/80">
+                                <strong class="text-amber-800"><i class="ph-fill ph-lightbulb"></i> 핵심 구분법:</strong> ${item.exp}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            renderFlashcardView(topics, studiedSet) {
+                const container = document.getElementById('studyFlashcardContainer');
+                if (topics.length === 0) {
+                    container.innerHTML = `<div class="bg-white rounded-3xl p-8 text-center text-slate-400">표시할 단어가 없습니다.</div>`;
+                    return;
+                }
+
+                if (this.studyState.flashcardIndex >= topics.length) {
+                    this.studyState.flashcardIndex = 0;
+                }
+                const item = topics[this.studyState.flashcardIndex];
+                const isStudied = studiedSet.has(item.num);
+
+                container.innerHTML = `
+                    <div class="bg-white rounded-3xl border-2 border-slate-200 shadow-xl p-6 sm:p-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 rounded-xl bg-brand-50 text-brand-700 text-xs font-bold border border-brand-200">
+                                제${item.chapter}장 • 교재 ${item.num}번 항목 (${this.studyState.flashcardIndex + 1} / ${topics.length})
+                            </span>
+                            <button onclick="app.toggleStudiedTopic('${item.num}')"
+                                class="px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 ${isStudied ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+                                <i class="ph-bold ${isStudied ? 'ph-check-circle' : 'ph-circle'}"></i>
+                                <span>${isStudied ? '학습 완료됨' : '학습 완료 체크하기'}</span>
+                            </button>
+                        </div>
+
+                        <div class="text-center py-6 px-4 bg-slate-50 rounded-2xl border border-slate-200/80 mb-5">
+                            <div class="text-xs font-bold text-slate-400 mb-1">핵심 학습 어휘</div>
+                            <h3 class="font-display text-3xl sm:text-4xl text-slate-800">${item.topic}</h3>
+                        </div>
+
+                        <div class="space-y-3 mb-5">
+                            ${item.examples.map(ex => `
+                                <div class="p-4 rounded-2xl bg-brand-50/50 border border-brand-200">
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="font-display text-lg text-brand-800">✔ ${ex.word}</span>
+                                        <button onclick="app.speakText('${ex.plainSentence.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg bg-white text-slate-700 hover:text-brand-600 text-xs font-bold border border-slate-200 flex items-center gap-1">
+                                            <i class="ph-fill ph-speaker-high text-brand-600"></i> 발음 듣기
+                                        </button>
+                                    </div>
+                                    <p class="text-base sm:text-lg font-bold text-slate-800">${ex.sentenceHtml}</p>
+                                    <p class="text-xs sm:text-sm text-slate-600 mt-1">뜻: ${ex.hint}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200 text-sm text-amber-950 mb-6">
+                            <strong>💡 선생님 설명:</strong> ${item.exp}
+                        </div>
+
+                        <div class="flex items-center justify-between gap-3">
+                            <button onclick="app.moveFlashcard(-1)" class="flex-1 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-display text-base flex items-center justify-center gap-1.5">
+                                <i class="ph-bold ph-arrow-left"></i> 이전 단어
+                            </button>
+                            <button onclick="app.moveFlashcard(1)" class="flex-1 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-display text-base flex items-center justify-center gap-1.5 shadow-sm">
+                                다음 단어 <i class="ph-bold ph-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            moveFlashcard(delta) {
+                const topics = this.getFilteredStudyTopics();
+                if (topics.length === 0) return;
+                this.studyState.flashcardIndex = (this.studyState.flashcardIndex + delta + topics.length) % topics.length;
+                this.renderStudyItems();
+            },
+
+            // Start Quiz for Chapter (1~5 or ALL_MIX)
+            startQuiz(chapterId, customQuestions = null) {
+                let pool = [];
+                let chapterTitle = "";
+
+                if (customQuestions) {
+                    pool = [...customQuestions];
+                    chapterTitle = this.activeQuiz.chapterTitle + " (오답 다시 풀기)";
+                } else {
+                    const meta = CHAPTER_META.find(c => String(c.id) === String(chapterId));
+                    chapterTitle = meta ? meta.title : `제${chapterId}장`;
+
+                    if (chapterId === 'ALL_MIX') {
+                        pool = [...FULL_QUESTION_BANK];
+                    } else {
+                        pool = FULL_QUESTION_BANK.filter(q => String(q.chapter) === String(chapterId));
+                    }
+
+                    // If user chose '단원 모든 단어 풀기 (999)', keep textbook order so every single word is covered systematically
+                    if (this.questionCountSetting >= 999) {
+                        pool.sort((a, b) => Number(a.num) - Number(b.num) || a.id - b.id);
+                    } else {
+                        pool.sort(() => Math.random() - 0.5);
+                        const limit = Math.min(this.questionCountSetting, pool.length);
+                        pool = pool.slice(0, limit);
+                    }
+                }
+
+                this.activeQuiz = {
+                    chapterId: chapterId,
+                    chapterTitle: chapterTitle,
+                    questions: pool,
+                    currentIndex: 0,
+                    correctCount: 0,
+                    startTime: Date.now(),
+                    userAnswers: [],
+                    answeredCurrent: false
+                };
+
+                this.renderCurrentQuizQuestion();
+                this.showView('view-quiz');
+            },
+
+            renderCurrentQuizQuestion() {
+                const q = this.activeQuiz.questions[this.activeQuiz.currentIndex];
+                const total = this.activeQuiz.questions.length;
+                const currentNum = this.activeQuiz.currentIndex + 1;
+
+                this.activeQuiz.answeredCurrent = false;
+
+                document.getElementById('quizChapterBadge').textContent = this.activeQuiz.chapterTitle;
+                document.getElementById('quizCurrentNum').textContent = currentNum;
+                document.getElementById('quizTotalNum').textContent = total;
+                document.getElementById('quizProgressBar').style.width = `${Math.round((currentNum / total) * 100)}%`;
+
+                document.getElementById('quizTopicText').textContent = `교재 ${q.num}번 • ${q.topic}`;
+                document.getElementById('quizSentence').innerHTML = q.sentence.replace('[___]', `<span id="sentenceBlank" class="highlight-blank">?</span>`);
+                document.getElementById('quizHintText').textContent = `힌트: ${q.hint}`;
+
+                // Shuffle options slightly
+                const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+                const optionsContainer = document.getElementById('quizOptionsContainer');
+                optionsContainer.innerHTML = shuffledOptions.map((opt, idx) => `
+                    <button onclick="app.selectQuizOption('${opt.replace(/'/g, "\\'")}', this)"
+                        class="quiz-opt-btn py-5 px-6 rounded-2xl border-2 border-slate-200 bg-white hover:border-brand-500 hover:bg-brand-50/40 text-xl sm:text-2xl font-display text-slate-800 shadow-xs transition-all flex items-center justify-between group">
+                        <span class="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-brand-100 text-slate-500 group-hover:text-brand-700 text-sm font-sans font-bold flex items-center justify-center">
+                            ${idx + 1}
+                        </span>
+                        <span class="flex-1 text-center">${opt}</span>
+                        <span class="w-8"></span>
+                    </button>
+                `).join('');
+
+                // Hide feedback box
+                const feedbackBox = document.getElementById('quizFeedbackBox');
+                feedbackBox.classList.add('hidden');
+            },
+
+            selectQuizOption(selectedOption, btnElement) {
+                if (this.activeQuiz.answeredCurrent) return;
+                this.activeQuiz.answeredCurrent = true;
+
+                const q = this.activeQuiz.questions[this.activeQuiz.currentIndex];
+                const isCorrect = selectedOption === q.answer;
+
+                if (isCorrect) {
+                    this.activeQuiz.correctCount++;
+                    this.sound.playCorrect();
+                } else {
+                    this.sound.playWrong();
+                }
+
+                this.activeQuiz.userAnswers.push({
+                    question: q,
+                    selected: selectedOption,
+                    isCorrect: isCorrect
+                });
+
+                // Update blank in sentence with the correct answer
+                const blankEl = document.getElementById('sentenceBlank');
+                if (blankEl) {
+                    blankEl.textContent = q.answer;
+                }
+
+                // Style option buttons
+                const allBtns = document.querySelectorAll('.quiz-opt-btn');
+                allBtns.forEach(btn => {
+                    btn.disabled = true;
+                    const text = btn.querySelector('span:nth-child(2)').textContent;
+                    if (text === q.answer) {
+                        btn.className = "quiz-opt-btn py-5 px-6 rounded-2xl border-2 border-brand-600 bg-brand-50 text-xl sm:text-2xl font-display text-brand-800 shadow-sm flex items-center justify-between";
+                    } else if (btn === btnElement && !isCorrect) {
+                        btn.className = "quiz-opt-btn py-5 px-6 rounded-2xl border-2 border-rose-500 bg-rose-50 text-xl sm:text-2xl font-display text-rose-800 flex items-center justify-between opacity-90";
+                    } else {
+                        btn.className = "quiz-opt-btn py-5 px-6 rounded-2xl border-2 border-slate-200 bg-slate-50 text-xl sm:text-2xl font-display text-slate-400 flex items-center justify-between opacity-60";
+                    }
+                });
+
+                // Show Feedback Box
+                const feedbackBox = document.getElementById('quizFeedbackBox');
+                const iconBox = document.getElementById('feedbackIconBox');
+                const titleEl = document.getElementById('feedbackTitle');
+                const expEl = document.getElementById('feedbackExplanation');
+                const nextBtn = document.getElementById('nextQuestionBtn');
+
+                feedbackBox.classList.remove('hidden');
+
+                if (isCorrect) {
+                    feedbackBox.className = "mt-6 rounded-2xl p-5 border-2 border-brand-300 bg-brand-50/80 transition-all";
+                    iconBox.className = "w-10 h-10 rounded-xl bg-brand-500 text-white flex items-center justify-center shrink-0 text-2xl";
+                    iconBox.innerHTML = `<i class="ph-bold ph-check"></i>`;
+                    titleEl.className = "font-display text-lg sm:text-xl text-brand-800";
+                    titleEl.textContent = "정답이에요! 아주 잘했어요 👏";
+                } else {
+                    feedbackBox.className = "mt-6 rounded-2xl p-5 border-2 border-rose-300 bg-rose-50/80 transition-all";
+                    iconBox.className = "w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 text-2xl";
+                    iconBox.innerHTML = `<i class="ph-bold ph-x"></i>`;
+                    titleEl.className = "font-display text-lg sm:text-xl text-rose-800";
+                    titleEl.textContent = `아쉬워요! 정답은 '${q.answer}' 입니다.`;
+                }
+
+                expEl.textContent = q.exp;
+
+                const isLast = this.activeQuiz.currentIndex === this.activeQuiz.questions.length - 1;
+                nextBtn.innerHTML = isLast
+                    ? `<span>결과 확인하기</span><i class="ph-bold ph-flag-checkered"></i>`
+                    : `<span>다음 문제</span><i class="ph-bold ph-arrow-right"></i>`;
+            },
+
+            nextQuestion() {
+                if (this.activeQuiz.currentIndex < this.activeQuiz.questions.length - 1) {
+                    this.activeQuiz.currentIndex++;
+                    this.renderCurrentQuizQuestion();
+                } else {
+                    this.finishQuiz();
+                }
+            },
+
+            finishQuiz() {
+                this.sound.playFanfare();
+                const total = this.activeQuiz.questions.length;
+                const correct = this.activeQuiz.correctCount;
+                const score = Math.round((correct / total) * 100);
+                const durationSec = Math.max(1, Math.round((Date.now() - this.activeQuiz.startTime) / 1000));
+
+                const wrongItems = this.activeQuiz.userAnswers
+                    .filter(a => !a.isCorrect)
+                    .map(a => ({
+                        num: a.question.num,
+                        topic: a.question.topic,
+                        chosen: a.selected,
+                        answer: a.question.answer
+                    }));
+
+                // Format current timestamp
+                const now = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+                // Save to Teacher Management Records
+                if (this.currentStudent) {
+                    // Also mark correctly answered topics as studied in the student's vocabulary progress!
+                    const studiedSet = this.getStudentStudySet();
+                    this.activeQuiz.userAnswers.forEach(ans => {
+                        if (ans.isCorrect) studiedSet.add(ans.question.num);
+                    });
+
+                    this.records.push({
+                        id: 'rec-' + Date.now(),
+                        timestamp: timestamp,
+                        studentId: this.currentStudent.studentId,
+                        studentName: this.currentStudent.name,
+                        chapterId: this.activeQuiz.chapterId,
+                        chapterTitle: this.activeQuiz.chapterTitle,
+                        score: score,
+                        correctCount: correct,
+                        totalCount: total,
+                        durationSec: durationSec,
+                        wrongItems: wrongItems
+                    });
+                }
+
+                // Populate Result View
+                document.getElementById('resultChapterTag').textContent = this.activeQuiz.chapterTitle;
+                document.getElementById('resultScoreText').textContent = `${score}점`;
+                document.getElementById('resultCorrectCountText').textContent = `${correct} / ${total}`;
+                document.getElementById('resultTimeText').textContent = `${durationSec}초`;
+
+                const badgeIcon = document.getElementById('resultBadgeIcon');
+                const titleEl = document.getElementById('resultTitle');
+                const subEl = document.getElementById('resultSubtitle');
+
+                if (score === 100) {
+                    badgeIcon.className = "w-24 h-24 rounded-3xl mx-auto flex items-center justify-center text-5xl mb-4 shadow-md bg-amber-100 text-amber-500";
+                    badgeIcon.innerHTML = `<i class="ph-fill ph-trophy"></i>`;
+                    titleEl.textContent = "와우! 100점 만점이에요! 🎉";
+                    subEl.textContent = `${this.currentStudent.name} 학생, 이번 단원의 맞춤법 박사님이네요!`;
+                } else if (score >= 70) {
+                    badgeIcon.className = "w-24 h-24 rounded-3xl mx-auto flex items-center justify-center text-5xl mb-4 shadow-md bg-brand-100 text-brand-600";
+                    badgeIcon.innerHTML = `<i class="ph-fill ph-thumbs-up"></i>`;
+                    titleEl.textContent = "참 잘했어요! 👍";
+                    subEl.textContent = "조금만 더 복습하면 완벽하게 마스터할 수 있어요!";
+                } else {
+                    badgeIcon.className = "w-24 h-24 rounded-3xl mx-auto flex items-center justify-center text-5xl mb-4 shadow-md bg-blue-100 text-blue-600";
+                    badgeIcon.innerHTML = `<i class="ph-fill ph-plant"></i>`;
+                    titleEl.textContent = "끝까지 풀어서 멋져요! 🌱";
+                    subEl.textContent = "아래 오답 노트를 읽고 틀린 문제를 다시 한번 풀어 볼까요?";
+                }
+
+                // Show/Hide Retry Wrong Questions Button
+                const retryBtn = document.getElementById('retryWrongBtn');
+                if (wrongItems.length > 0) {
+                    retryBtn.classList.remove('hidden');
+                    retryBtn.classList.add('flex');
+                } else {
+                    retryBtn.classList.add('hidden');
+                    retryBtn.classList.remove('flex');
+                }
+
+                // Render Review List
+                const reviewContainer = document.getElementById('resultReviewList');
+                reviewContainer.innerHTML = this.activeQuiz.userAnswers.map((ans, i) => {
+                    const q = ans.question;
+                    const fullSentence = q.sentence.replace('[___]', `<strong class="text-brand-700 underline">${q.answer}</strong>`);
+                    return `
+                        <div class="p-4 rounded-2xl border ${ans.isCorrect ? 'bg-slate-50/70 border-slate-200' : 'bg-rose-50/60 border-rose-200'}">
+                            <div class="flex items-center justify-between gap-2 mb-1.5">
+                                <span class="text-xs font-bold ${ans.isCorrect ? 'text-brand-700' : 'text-rose-700'}">
+                                    문제 ${i + 1} (${q.num}. ${q.topic})
+                                </span>
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${ans.isCorrect ? 'bg-brand-100 text-brand-800' : 'bg-rose-200 text-rose-900'}">
+                                    ${ans.isCorrect ? 'O 정답' : `X 오답 (내 선택: ${ans.selected})`}
+                                </span>
+                            </div>
+                            <p class="text-base font-bold text-slate-800 mb-1">${fullSentence}</p>
+                            <p class="text-xs sm:text-sm text-slate-600">${q.exp}</p>
+                        </div>
+                    `;
+                }).join('');
+
+                this.showView('view-result');
+            },
+
+            retryWrongQuestions() {
+                const wrongQuestions = this.activeQuiz.userAnswers
+                    .filter(a => !a.isCorrect)
+                    .map(a => a.question);
+
+                if (wrongQuestions.length > 0) {
+                    this.startQuiz(this.activeQuiz.chapterId, wrongQuestions);
+                }
+            },
+
+            confirmQuitQuiz() {
+                this.showModal({
+                    title: "퀴즈를 그만할까요?",
+                    body: "지금 나가면 현재 풀고 있는 퀴즈 점수가 저장되지 않아요. 단원 선택 화면으로 돌아갈까요?",
+                    showCancel: true,
+                    onConfirm: () => this.showChaptersView()
+                });
+            },
+
+            // Speech Synthesis (TTS) for helping multicultural students with pronunciation
+            speakCurrentSentence() {
+                const q = this.activeQuiz.questions[this.activeQuiz.currentIndex];
+                if (!q) return;
+                const textToRead = q.sentence.replace('[___]', '무엇');
+                this.speakText(textToRead);
+            },
+
+            speakText(text) {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utter = new SpeechSynthesisUtterance(text);
+                    utter.lang = 'ko-KR';
+                    utter.rate = 0.92; // Slightly slower and clearer for learners
+                    window.speechSynthesis.speak(utter);
+                }
+            },
+
+            // ================= TEACHER MANAGEMENT DASHBOARD =================
+            openTeacherAuthOrDashboard() {
+                if (this.teacherUnlocked) {
+                    this.renderTeacherDashboard();
+                    this.showView('view-teacher');
+                    return;
+                }
+
+                this.showModal({
+                    title: "교사 관리 모드 접속",
+                    body: "학생들의 학습 기록을 관리하기 위해 선생님 비밀번호를 입력해 주세요.",
+                    showPinInput: true,
+                    showCancel: true,
+                    onConfirm: (pinValue) => {
+                        if (pinValue === "1234" || pinValue === "0000") {
+                            this.teacherUnlocked = true;
+                            this.renderTeacherDashboard();
+                            this.showView('view-teacher');
+                        } else {
+                            setTimeout(() => {
+                                this.showModal({
+                                    title: "비밀번호 확인",
+                                    body: "비밀번호가 일치하지 않습니다. (기본 비밀번호는 1234 입니다.)",
+                                    showCancel: false
+                                });
+                            }, 150);
+                        }
+                    }
+                });
+            },
+
+            renderTeacherDashboard() {
+                const allRecords = this.records;
+
+                // 1. Top KPI Stats
+                const uniqueStudentsSet = new Set(allRecords.map(r => `${r.studentId}_${r.studentName}`));
+                document.getElementById('statUniqueStudents').textContent = `${uniqueStudentsSet.size}명`;
+                document.getElementById('statTotalAttempts').textContent = `${allRecords.length}회`;
+
+                const overallAvg = allRecords.length > 0
+                    ? Math.round(allRecords.reduce((s, r) => s + r.score, 0) / allRecords.length)
+                    : 0;
+                document.getElementById('statAverageScore').textContent = `${overallAvg}점`;
+
+                // 2. Chapter Breakdown (Chapters 1 to 5)
+                const chapterStatsContainer = document.getElementById('teacherChapterStats');
+                let weakestChapterName = "-";
+                let lowestAvg = 101;
+
+                const chRowsHtml = [1, 2, 3, 4, 5].map(chNum => {
+                    const meta = CHAPTER_META.find(c => c.id === chNum);
+                    const chRecs = allRecords.filter(r => String(r.chapterId) === String(chNum));
+                    const chAvg = chRecs.length > 0
+                        ? Math.round(chRecs.reduce((s, r) => s + r.score, 0) / chRecs.length)
+                        : null;
+
+                    if (chAvg !== null && chAvg < lowestAvg) {
+                        lowestAvg = chAvg;
+                        weakestChapterName = meta.title;
+                    }
+
+                    return `
+                        <div>
+                            <div class="flex items-center justify-between text-xs sm:text-sm mb-1">
+                                <span class="font-bold text-slate-700">${meta.title}</span>
+                                <span class="font-bold ${chAvg !== null ? 'text-brand-700' : 'text-slate-400'}">
+                                    ${chAvg !== null ? `${chAvg}% (${chRecs.length}회 응시)` : '응시 기록 없음'}
+                                </span>
+                            </div>
+                            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full ${chAvg !== null && chAvg < 75 ? 'bg-amber-500' : 'bg-brand-500'} rounded-full transition-all"
+                                     style="width: ${chAvg !== null ? chAvg : 0}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                chapterStatsContainer.innerHTML = chRowsHtml;
+                document.getElementById('statWeakestChapter').textContent = weakestChapterName;
+
+                // 3. Top 5 Most Missed Words across all students
+                const missMap = {};
+                allRecords.forEach(r => {
+                    (r.wrongItems || []).forEach(w => {
+                        const key = `${w.num}. ${w.topic}`;
+                        if (!missMap[key]) {
+                            missMap[key] = { count: 0, answer: w.answer, sampleChosen: w.chosen };
+                        }
+                        missMap[key].count++;
+                    });
+                });
+
+                const sortedMissed = Object.entries(missMap)
+                    .sort((a, b) => b[1].count - a[1].count)
+                    .slice(0, 5);
+
+                const topMissedEl = document.getElementById('teacherTopMissedList');
+                if (sortedMissed.length === 0) {
+                    topMissedEl.innerHTML = `<div class="text-sm text-slate-400 py-6 text-center">현재 오답 기록이 없습니다.</div>`;
+                } else {
+                    topMissedEl.innerHTML = sortedMissed.map(([label, info], idx) => `
+                        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-sm">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-6 h-6 rounded-lg bg-rose-100 text-rose-700 font-bold text-xs flex items-center justify-center">
+                                    ${idx + 1}
+                                </span>
+                                <div>
+                                    <span class="font-bold text-slate-800">${label}</span>
+                                    <span class="text-xs text-slate-500 ml-2">(정답: <strong class="text-brand-600">${info.answer}</strong>)</span>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 text-xs font-bold border border-rose-200">
+                                오답 ${info.count}회
+                            </span>
+                        </div>
+                    `).join('');
+                }
+
+                // 4. Student Achievement Matrix (Chapters 1 ~ 5 per student)
+                const studentMap = {};
+                allRecords.forEach(r => {
+                    const key = `${r.studentId}__${r.studentName}`;
+                    if (!studentMap[key]) {
+                        studentMap[key] = {
+                            studentId: r.studentId,
+                            studentName: r.studentName,
+                            attempts: 0,
+                            totalScoreSum: 0,
+                            chapters: { 1: null, 2: null, 3: null, 4: null, 5: null }
+                        };
+                    }
+                    const st = studentMap[key];
+                    st.attempts++;
+                    st.totalScoreSum += r.score;
+                    if ([1, 2, 3, 4, 5].includes(Number(r.chapterId))) {
+                        const ch = Number(r.chapterId);
+                        st.chapters[ch] = st.chapters[ch] === null ? r.score : Math.max(st.chapters[ch], r.score);
+                    }
+                });
+
+                const matrixBody = document.getElementById('teacherStudentMatrixBody');
+                const studentList = Object.values(studentMap);
+
+                const formatBadge = (val) => {
+                    if (val === null) return `<span class="text-slate-300">-</span>`;
+                    if (val >= 80) return `<span class="px-2 py-0.5 rounded-lg bg-brand-50 text-brand-700 font-bold text-xs border border-brand-200">${val}점</span>`;
+                    return `<span class="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 font-bold text-xs border border-amber-200">${val}점</span>`;
+                };
+
+                if (studentList.length === 0) {
+                    matrixBody.innerHTML = `<tr><td colspan="10" class="text-center py-6 text-slate-400">학생 학습 데이터가 없습니다.</td></tr>`;
+                } else {
+                    matrixBody.innerHTML = studentList.map(st => {
+                        const avg = Math.round(st.totalScoreSum / st.attempts);
+                        const stKey = `${st.studentId}__${st.studentName}`;
+                        const studiedCount = this.studiedMap[stKey] ? this.studiedMap[stKey].size : 0;
+                        return `
+                            <tr class="hover:bg-slate-50/80">
+                                <td class="py-3 px-3 font-medium text-slate-600">${st.studentId}</td>
+                                <td class="py-3 px-3 font-bold text-slate-800">${st.studentName}</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-xs border border-indigo-200">${studiedCount} / 100개</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold text-slate-600">${st.attempts}회</td>
+                                <td class="py-3 px-3 text-center">${formatBadge(st.chapters[1])}</td>
+                                <td class="py-3 px-3 text-center">${formatBadge(st.chapters[2])}</td>
+                                <td class="py-3 px-3 text-center">${formatBadge(st.chapters[3])}</td>
+                                <td class="py-3 px-3 text-center">${formatBadge(st.chapters[4])}</td>
+                                <td class="py-3 px-3 text-center">${formatBadge(st.chapters[5])}</td>
+                                <td class="py-3 px-3 text-center font-display text-base text-slate-800">${avg}점</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                // 5. Detailed Filterable Log Table
+                const searchKeyword = (document.getElementById('teacherFilterSearch')?.value || '').trim().toLowerCase();
+                const chapterFilter = document.getElementById('teacherFilterChapter')?.value || 'ALL';
+
+                const filteredLogs = allRecords.filter(r => {
+                    const matchSearch = !searchKeyword ||
+                        r.studentId.toLowerCase().includes(searchKeyword) ||
+                        r.studentName.toLowerCase().includes(searchKeyword);
+                    const matchChapter = chapterFilter === 'ALL' || String(r.chapterId) === String(chapterFilter);
+                    return matchSearch && matchChapter;
+                }).slice().reverse();
+
+                const logTableBody = document.getElementById('teacherLogTableBody');
+                if (filteredLogs.length === 0) {
+                    logTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-400">조건에 맞는 학습 기록이 없습니다.</td></tr>`;
+                } else {
+                    logTableBody.innerHTML = filteredLogs.map(r => `
+                        <tr class="hover:bg-slate-50/90">
+                            <td class="py-3 px-3 text-xs text-slate-500 whitespace-nowrap">${r.timestamp}</td>
+                            <td class="py-3 px-3 font-medium text-slate-700 whitespace-nowrap">${r.studentId}</td>
+                            <td class="py-3 px-3 font-bold text-slate-800 whitespace-nowrap">${r.studentName}</td>
+                            <td class="py-3 px-3 text-slate-700 whitespace-nowrap">${r.chapterTitle}</td>
+                            <td class="py-3 px-3 text-center">
+                                <span class="px-2.5 py-1 rounded-lg font-bold text-xs ${r.score >= 80 ? 'bg-brand-100 text-brand-800' : 'bg-amber-100 text-amber-800'}">
+                                    ${r.score}점
+                                </span>
+                            </td>
+                            <td class="py-3 px-3 text-center text-xs font-bold text-slate-600">${r.correctCount} / ${r.totalCount}</td>
+                            <td class="py-3 px-3 text-xs">
+                                ${r.wrongItems.length === 0
+                                    ? '<span class="text-brand-600 font-bold">전부 정답</span>'
+                                    : r.wrongItems.map(w => `<span class="inline-block bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-md mr-1 mb-1">${w.num}. ${w.topic} (오답: ${w.chosen})</span>`).join('')
+                                }
+                            </td>
+                            <td class="py-3 px-3 text-center">
+                                <button onclick="app.deleteRecord('${r.id}')" class="text-slate-400 hover:text-rose-600 p-1" title="기록 삭제">
+                                    <i class="ph-bold ph-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            },
+
+            loadDemoStudentRecords() {
+                const extraDemos = [
+                    {
+                        id: 'rec-extra-' + Date.now() + '-1',
+                        timestamp: '2026-11-05 11:02',
+                        studentId: '30102',
+                        studentName: '응우옌민수',
+                        chapterId: 2,
+                        chapterTitle: '제2장 헷갈리는 말',
+                        score: 90,
+                        correctCount: 9,
+                        totalCount: 10,
+                        durationSec: 61,
+                        wrongItems: [{ num: "28", topic: "들리다, 들르다", chosen: "들려서", answer: "들러서" }]
+                    },
+                    {
+                        id: 'rec-extra-' + Date.now() + '-2',
+                        timestamp: '2026-11-05 11:08',
+                        studentId: '30208',
+                        studentName: '박소피아',
+                        chapterId: 1,
+                        chapterTitle: '제1장 발음이 비슷한 말',
+                        score: 100,
+                        correctCount: 10,
+                        totalCount: 10,
+                        durationSec: 49,
+                        wrongItems: []
+                    },
+                    {
+                        id: 'rec-extra-' + Date.now() + '-3',
+                        timestamp: '2026-11-05 11:12',
+                        studentId: '30311',
+                        studentName: '리웨이',
+                        chapterId: 3,
+                        chapterTitle: '제3장 틀리기 쉬운 말',
+                        score: 70,
+                        correctCount: 7,
+                        totalCount: 10,
+                        durationSec: 88,
+                        wrongItems: [
+                            { num: "42", topic: "며칠 O, 몇일 X", chosen: "몇일", answer: "며칠" },
+                            { num: "53", topic: "웃어른 O, 윗어른 X", chosen: "윗어른", answer: "웃어른" },
+                            { num: "59", topic: "잠그다 O, 잠구다 X", chosen: "잠구고", answer: "잠그고" }
+                        ]
+                    }
+                ];
+                this.records.push(...extraDemos);
+                this.renderTeacherDashboard();
+            },
+
+            deleteRecord(recordId) {
+                this.records = this.records.filter(r => r.id !== recordId);
+                this.renderTeacherDashboard();
+            },
+
+            confirmClearAllRecords() {
+                this.showModal({
+                    title: "전체 기록을 초기화할까요?",
+                    body: "모든 학생의 학습 이력이 삭제됩니다. 계속하시겠습니까?",
+                    showCancel: true,
+                    onConfirm: () => {
+                        this.records = [];
+                        this.renderTeacherDashboard();
+                    }
+                });
+            },
+
+            exportRecordsToCSV() {
+                if (this.records.length === 0) {
+                    this.showModal({
+                        title: "내보낼 데이터 없음",
+                        body: "현재 저장된 학생 학습 기록이 없습니다.",
+                        showCancel: false
+                    });
+                    return;
+                }
+
+                const headers = ["일시", "학번", "이름", "학습단원", "점수", "정답수", "문항수", "소요시간(초)", "오답내역"];
+                const rows = this.records.map(r => {
+                    const wrongStr = r.wrongItems.map(w => `${w.num}.${w.topic}(선택:${w.chosen})`).join(' / ');
+                    return [
+                        `"${r.timestamp}"`,
+                        `"${r.studentId}"`,
+                        `"${r.studentName}"`,
+                        `"${r.chapterTitle}"`,
+                        r.score,
+                        r.correctCount,
+                        r.totalCount,
+                        r.durationSec,
+                        `"${wrongStr}"`
+                    ].join(',');
+                });
+
+                const csvContent = "\uFEFF" + [headers.join(','), ...rows].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `맞춤법퀴즈_학생학습기록_${new Date().toISOString().slice(0,10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            },
+
+            // Custom Modal Helper
+            showModal({ title, body, showPinInput = false, showCancel = true, onConfirm = null }) {
+                const modal = document.getElementById('customModal');
+                document.getElementById('modalTitle').textContent = title;
+                document.getElementById('modalBody').textContent = body;
+
+                const pinWrapper = document.getElementById('modalInputWrapper');
+                const pinInput = document.getElementById('modalPinInput');
+                if (showPinInput) {
+                    pinWrapper.classList.remove('hidden');
+                    pinInput.value = '';
+                    setTimeout(() => pinInput.focus(), 50);
+                } else {
+                    pinWrapper.classList.add('hidden');
+                }
+
+                const cancelBtn = document.getElementById('modalCancelBtn');
+                if (showCancel) {
+                    cancelBtn.classList.remove('hidden');
+                } else {
+                    cancelBtn.classList.add('hidden');
+                }
+
+                const close = () => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                };
+
+                cancelBtn.onclick = close;
+                document.getElementById('modalConfirmBtn').onclick = () => {
+                    const val = pinInput.value;
+                    close();
+                    if (onConfirm) onConfirm(val);
+                };
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        };
+
+        window.onload = () => {
+            app.init();
+        };
+    </script>
+</body>
+</html>
